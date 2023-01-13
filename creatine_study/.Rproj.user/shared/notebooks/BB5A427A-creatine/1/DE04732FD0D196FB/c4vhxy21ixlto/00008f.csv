@@ -1,0 +1,7 @@
+"0","(paste(""mf"",i,sep = """")
+jpeg('rplot.jpg')
+"
+"2","Error: unexpected symbol in:
+""(paste(""mf"",i,sep = """")
+jpeg""
+"
