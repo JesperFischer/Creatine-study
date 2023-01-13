@@ -1,0 +1,172 @@
+"0","knitr::opts_chunk$set(echo = TRUE)"
+"0","library(rethinking)"
+"2","Loading required package: rstan
+"
+"2","Loading required package: StanHeaders
+"
+"2","Loading required package: ggplot2
+"
+"2","rstan (Version 2.21.2, GitRev: 2e1f913d3ca3)
+"
+"2","For execution on a local, multicore CPU with excess RAM we recommend calling
+options(mc.cores = parallel::detectCores()).
+To avoid recompilation of unchanged Stan programs, we recommend calling
+rstan_options(auto_write = TRUE)
+"
+"2","Do not specify '-march=native' in 'LOCAL_CPPFLAGS' or a Makevars file
+"
+"2","Loading required package: parallel
+"
+"2","rethinking (Version 2.13)
+"
+"2","
+Attaching package: ‘rethinking’
+
+"
+"2","The following object is masked from ‘package:stats’:
+
+    rstudent
+
+"
+"0","library(tidyverse)"
+"2","Registered S3 methods overwritten by 'dbplyr':
+  method         from
+  print.tbl_lazy     
+  print.tbl_sql      
+"
+"2","[30m-- [1mAttaching packages[22m --------------------------------------------------------- tidyverse 1.3.0 --[39m
+"
+"2","[30m[32mv[30m [34mtibble [30m 3.1.0     [32mv[30m [34mdplyr  [30m 1.0.4
+[32mv[30m [34mtidyr  [30m 1.1.2     [32mv[30m [34mstringr[30m 1.4.0
+[32mv[30m [34mreadr  [30m 1.4.0     [32mv[30m [34mforcats[30m 0.5.1
+[32mv[30m [34mpurrr  [30m 0.3.4     [39m
+"
+"2","[30m-- [1mConflicts[22m ------------------------------------------------------------ tidyverse_conflicts() --
+[31mx[30m [34mtidyr[30m::[32mextract()[30m masks [34mrstan[30m::extract()
+[31mx[30m [34mdplyr[30m::[32mfilter()[30m  masks [34mstats[30m::filter()
+[31mx[30m [34mdplyr[30m::[32mlag()[30m     masks [34mstats[30m::lag()
+[31mx[30m [34mpurrr[30m::[32mmap()[30m     masks [34mrethinking[30m::map()[39m
+"
+"0","library(sjmisc)"
+"2","package ‘sjmisc’ was built under R version 4.0.4"
+"2","
+Attaching package: ‘sjmisc’
+
+"
+"2","The following object is masked from ‘package:purrr’:
+
+    is_empty
+
+"
+"2","The following object is masked from ‘package:tidyr’:
+
+    replace_na
+
+"
+"2","The following object is masked from ‘package:tibble’:
+
+    add_case
+
+"
+"0","library(lmerTest)"
+"2","package ‘lmerTest’ was built under R version 4.0.4"
+"2","Loading required package: lme4
+"
+"2","Loading required package: Matrix
+"
+"2","
+Attaching package: ‘Matrix’
+
+"
+"2","The following objects are masked from ‘package:tidyr’:
+
+    expand, pack, unpack
+
+"
+"2","
+Attaching package: ‘lmerTest’
+
+"
+"2","The following object is masked from ‘package:lme4’:
+
+    lmer
+
+"
+"2","The following object is masked from ‘package:stats’:
+
+    step
+
+"
+"0","library(ggpubr)"
+"2","package ‘ggpubr’ was built under R version 4.0.4"
+"2","Registered S3 method overwritten by 'data.table':
+  method           from
+  print.data.table     
+"
+"2","Registered S3 methods overwritten by 'car':
+  method                          from
+  influence.merMod                lme4
+  cooks.distance.influence.merMod lme4
+  dfbeta.influence.merMod         lme4
+  dfbetas.influence.merMod        lme4
+"
+"0","library(simr)"
+"2","package ‘simr’ was built under R version 4.0.4"
+"2","
+Attaching package: ‘simr’
+
+"
+"2","The following object is masked from ‘package:lme4’:
+
+    getData
+
+"
+"2","The following object is masked from ‘package:stringr’:
+
+    fixed
+
+"
+"2","The following object is masked from ‘package:rethinking’:
+
+    compare
+
+"
+"0","library(MuMIn)"
+"2","package ‘MuMIn’ was built under R version 4.0.4"
+"2","
+Attaching package: ‘MuMIn’
+
+"
+"2","The following object is masked from ‘package:rethinking’:
+
+    DIC
+
+"
+"2","The following object is masked from ‘package:rstan’:
+
+    loo
+
+"
+"0","library(car)"
+"2","package ‘car’ was built under R version 4.0.4"
+"2","Loading required package: carData
+"
+"2","
+Attaching package: ‘car’
+
+"
+"2","The following object is masked from ‘package:dplyr’:
+
+    recode
+
+"
+"2","The following object is masked from ‘package:purrr’:
+
+    some
+
+"
+"2","The following object is masked from ‘package:rethinking’:
+
+    logit
+
+"

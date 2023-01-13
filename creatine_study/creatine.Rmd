@@ -1,0 +1,1555 @@
+---
+title: "power analysis for creatine study"
+output: html_document
+editor_options: 
+  chunk_output_type: inline
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(rethinking)
+library(tidyverse)
+library(sjmisc)
+library(lmerTest)
+library(ggpubr)
+library(simr)
+library(MuMIn)
+library(car)
+```
+
+
+
+
+
+```{r}
+ggline(q, 
+       x = "post", 
+       y = "bw1", 
+       col='creatine', 
+       add = c("mean_ci", "dodge"), 
+       palette = "jco")
+
+```
+```{r}
+#function makes 1000 simulations of these effect of the creatine group:
+#bw incease = 1.5 sd = 1
+#hang = 1 sd = 1
+#pull up = 1 sd = 1
+#hang max right  = 3, sd = 1
+#hang max left  = 3 sd  =1
+#lock off = 3 sd 1.5.
+# n = number of ppl in each group.
+
+i = 1
+v2 = rep(1,100)
+v4 = rep(1,100)
+v3 = data.frame(hmr = rep(1,100))
+v3$hml = rep(1,100)
+v3$l = rep(1,100)
+v3$p = rep(1,100)
+v3$h = rep(1,100)
+
+sim = function(n){
+for (i in seq(1:100)){
+
+simdata2 = data.frame(id = 1:n)
+simdata2$time = rep(0, n)
+simdata2$treatment = rep("control",n)
+
+simdata3 = data.frame(id = 1:n)
+simdata3$time = rep(1, n)
+simdata3$treatment = rep("control",n)
+
+simdata4 = data.frame(id = (n+1):(2*n))
+simdata4$time = rep(0, n)
+simdata4$treatment = rep("creatine",n)
+
+simdata5 = data.frame(id = (n+1):(n*2))
+simdata5$time = rep(1, n)
+simdata5$treatment = rep("creatine",n)
+
+ll <<- rbind(simdata2, simdata3, simdata4, simdata5)
+
+ll$treatment = as.factor(ll$treatment)
+ll$time = as.factor(ll$time)
+ll$id = as.factor(ll$id)
+  
+c0 = rnorm(n, 67, 7)
+c1 = rnorm(n, c0, 1)
+t0 = rnorm(n, 67, 7)        
+t1 = rnorm(n, t0+rnorm(n, 1, 1), 1)  
+
+u = c(c0,c1,t0,t1)
+
+ll$bw = u
+
+c0 = rnorm(n, 17, 5)
+c1 = rnorm(n, c0, 1.5)
+t0 = rnorm(n, 17, 5)        
+t1 = rnorm(n, t0+rnorm(n, 1, 1), 1.5)  
+
+
+u = c(c0,c1,t0,t1)
+
+ll$h = u
+ll$h = ll$bw*ll$h
+
+
+c0 = rnorm(n, 10, 4)
+c1 = rnorm(n, c0, 2)
+t0 = rnorm(n, 10, 4)        
+t1 = rnorm(n, t0+rnorm(n,1,1), 2)  
+
+u = c(c0,c1,t0,t1)
+ll$p = u
+ll$p = ll$bw*ll$h
+
+
+c0 = rnorm(n, 35, 17.5)
+c1 = rnorm(n, c0, 3)
+t0 = rnorm(n, 35, 17.5)        
+t1 = rnorm(n, t0+rnorm(n, 3, 1), 3)  
+
+
+u = c(c0,c1,t0,t1)
+
+ll$hmr = u
+
+
+
+c0 = rnorm(n, 30, 15)
+c1 = rnorm(n, c0, 3)
+t0 = rnorm(n, 30, 15)        
+t1 = rnorm(n, t0+rnorm(n, 3, 1), 3)  
+
+
+u = c(c0,c1,t0,t1)
+
+ll$hml = u
+
+c0 = rnorm(n, 25, 8)
+c1 = rnorm(n, c0, 2.5)
+t0 = rnorm(n, 25, 8)        
+t1 = rnorm(n, t0+rnorm(n, 3, 1.5), 2)  
+
+u = c(c0,c1,t0,t1)
+
+ll$l = u
+
+
+ff = ll %>% group_by(treatment, time) %>% summarize(mean = mean(hmr), sd = sd(hmr), .groups = "drop")
+q = ff[4,3]-ff[3,3]-(ff[2,3]-ff[1,3])
+q1 = sqrt(abs((((ff[1,4]+ff[2,4])/2)^2-((ff[3,4]+ff[4,4])/2)^2)/2))
+v3[i,1] <<- q/q1
+
+
+ff = ll %>% group_by(treatment, time) %>% summarize(mean = mean(hml), sd = sd(hml), .groups = "drop")
+q = ff[4,3]-ff[3,3]-(ff[2,3]-ff[1,3])
+q1 = sqrt(abs((((ff[1,4]+ff[2,4])/2)^2-((ff[3,4]+ff[4,4])/2)^2)/2))
+v3[i,2] <<- q/q1
+
+ff = ll %>% group_by(treatment, time) %>% summarize(mean = mean(l), sd = sd(l), .groups = "drop")
+q = ff[4,3]-ff[3,3]-(ff[2,3]-ff[1,3])
+q1 = sqrt(abs((((ff[1,4]+ff[2,4])/2)^2-((ff[3,4]+ff[4,4])/2)^2)/2))
+v3[i,3] <<- q/q1
+
+ff = ll %>% group_by(treatment, time) %>% summarize(mean = mean(p), sd = sd(p), .groups = "drop")
+q = ff[4,3]-ff[3,3]-(ff[2,3]-ff[1,3])
+q1 = sqrt(abs((((ff[1,4]+ff[2,4])/2)^2-((ff[3,4]+ff[4,4])/2)^2)/2))
+v3[i,4] <<- q/q1
+
+
+ff = ll %>% group_by(treatment, time) %>% summarize(mean = mean(h), sd = sd(h), .groups = "drop")
+q = ff[4,3]-ff[3,3]-(ff[2,3]-ff[1,3])
+q1 = sqrt(abs((((ff[1,4]+ff[2,4])/2)^2-((ff[3,4]+ff[4,4])/2)^2)/2))
+v3[i,5] <<- q/q1
+
+
+m101 = manova(cbind(p, h, hmr, hml, l) ~ time*treatment+ Error(id), data = ll)
+
+v2[i] <<- (summary(m101)[2]$`Error: Within`$stats[2,2])
+v4[i] <<- summary(m101)[2]$`Error: Within`$stats[2,6]
+ 
+
+
+}}
+
+```
+
+
+```{r}
+#function makes 1000 simulations of these effect of the creatine group: (for p, h, hmr, hml and l)
+#bw incease = 1.5 sd = 1
+#hang = 1 sd = 1
+#pull up = 1 sd = 1
+#hang max right  = 3, sd = 1
+#hang max left  = 3 sd  = 1
+#lock off = 3 sd 1.5.
+# n = number of ppl in each group.
+
+simulations = 50
+effectsizep = rep(1, simulations)
+v2 = rep(1,simulations)
+v3 = data.frame(hmr = rep(1,simulations))
+v4 = rep(1,simulations)
+v3$hml = rep(1,simulations)
+v3$l = rep(1,simulations)
+v3$p = rep(1,simulations)
+v3$h = rep(1,simulations)
+p = rep(1,simulations)
+h = rep(1,simulations)
+hmr = rep(1,simulations)
+hml = rep(1,simulations)
+l = rep(1,simulations)
+
+simr = function(n){
+
+for (i in seq(simulations)){
+
+simdata2 = data.frame(id = 1:n)
+simdata2$time = rep(0, n)
+simdata2$treatment = rep("control",n)
+
+simdata3 = data.frame(id = 1:n)
+simdata3$time = rep(1, n)
+simdata3$treatment = rep("control",n)
+
+simdata4 = data.frame(id = (n+1):(2*n))
+simdata4$time = rep(0, n)
+simdata4$treatment = rep("creatine",n)
+
+simdata5 = data.frame(id = (n+1):(n*2))
+simdata5$time = rep(1, n)
+simdata5$treatment = rep("creatine",n)
+
+ll <<- rbind(simdata2, simdata3, simdata4, simdata5)
+
+ll$treatment = as.factor(ll$treatment)
+ll$time = as.factor(ll$time)
+ll$id = as.factor(ll$id)
+
+
+
+c0 = rnorm(n, 67, 7)
+c1 = rnorm(n, c0, 1)
+t0 = rnorm(n, 67, 7)        
+t1 = rnorm(n, t0+rnorm(n, 2, 2), 1)  
+
+u = c(c0,c1,t0,t1)
+
+ll$bw = u
+
+
+c0 = rnorm(n, 17, 5)
+c1 = rnorm(n, c0, 1.5)
+t0 = rnorm(n, 17, 5)        
+t1 = rnorm(n, t0+rnorm(n, 1.3, 1), 1.5)  
+
+
+u = c(c0,c1,t0,t1)
+
+ll$h = u
+ll$h = ll$h*ll$bw
+
+c0 = rnorm(n, 10, 4)
+c1 = rnorm(n, c0, 2)
+t0 = rnorm(n, 10, 4)        
+t1 = rnorm(n, t0+rnorm(n,1,1), 2)  
+
+u = c(c0,c1,t0,t1)
+ll$p = u
+ll$p = ll$p*ll$bw
+
+
+c0 = rnorm(n, 35, 17.5)
+c1 = rnorm(n, c0, 3)
+t0 = rnorm(n, 35, 17.5)        
+t1 = rnorm(n, t0+rnorm(n, 3.5, 1), 3)  
+
+u = c(c0,c1,t0,t1)
+
+ll$hmr = u
+
+
+
+c0 = rnorm(n, 30, 15)
+c1 = rnorm(n, c0, 3)
+t0 = rnorm(n, 30, 15)        
+t1 = rnorm(n, t0+rnorm(n, 3, 1), 3)  
+
+u = c(c0,c1,t0,t1)
+
+ll$hml = u
+
+c0 = rnorm(n, 25, 8)
+c1 = rnorm(n, c0, 2.5)
+t0 = rnorm(n, 25, 8)        
+t1 = rnorm(n, t0+rnorm(n, 2, 2), 2)  
+
+u = c(c0,c1,t0,t1)
+
+ll$l = u
+
+
+ff = ll %>% group_by(treatment, time) %>% summarize(mean = mean(hmr), sd = sd(hmr), .groups = "drop")
+q = ff[4,3]-ff[3,3]-(ff[2,3]-ff[1,3])
+q1 = sqrt(abs((((ff[1,4]+ff[2,4])/2)^2-((ff[3,4]+ff[4,4])/2)^2)/2))
+v3[i,1] <<- q/q1
+
+
+ff = ll %>% group_by(treatment, time) %>% summarize(mean = mean(hml), sd = sd(hml), .groups = "drop")
+q = ff[4,3]-ff[3,3]-(ff[2,3]-ff[1,3])
+q1 = sqrt(abs((((ff[1,4]+ff[2,4])/2)^2-((ff[3,4]+ff[4,4])/2)^2)/2))
+v3[i,2] <<- q/q1
+
+ff = ll %>% group_by(treatment, time) %>% summarize(mean = mean(l), sd = sd(l), .groups = "drop")
+q = ff[4,3]-ff[3,3]-(ff[2,3]-ff[1,3])
+q1 = sqrt(abs((((ff[1,4]+ff[2,4])/2)^2-((ff[3,4]+ff[4,4])/2)^2)/2))
+v3[i,3] <<- q/q1
+
+ff = ll %>% group_by(treatment, time) %>% summarize(mean = mean(p), sd = sd(p), .groups = "drop")
+q = ff[4,3]-ff[3,3]-(ff[2,3]-ff[1,3])
+q1 = sqrt(abs((((ff[1,4]+ff[2,4])/2)^2-((ff[3,4]+ff[4,4])/2)^2)/2))
+v3[i,4] <<- q/q1
+
+
+ff = ll %>% group_by(treatment, time) %>% summarize(mean = mean(h), sd = sd(h), .groups = "drop")
+q = ff[4,3]-ff[3,3]-(ff[2,3]-ff[1,3])
+q1 = sqrt(abs((((ff[1,4]+ff[2,4])/2)^2-((ff[3,4]+ff[4,4])/2)^2)/2))
+v3[i,5] <<- q/q1
+
+
+m101 = manova(cbind(p, h, hmr, hml, l) ~ time*treatment+ Error(id), data = ll)
+summary(m101)
+v2[i] <<- (summary(m101)[2]$`Error: Within`$stats[2,2])
+v4[i] <<- summary(m101)[2]$`Error: Within`$stats[2,6]
+
+for (g in c(p,h,hmr,hml,l)){
+g[i] <<- summary(lmer(g ~ time*treatment+(1|id), data = ll))$coefficients[4,5]
+}
+
+
+}}
+  
+simr(20)
+  
+  
+  
+p[i] <<- summary(lmer(p ~ time*treatment+(1|id), data = ll))$coefficients[4,5]
+h[i] <<- summary(lmer(h ~ time*treatment+(1|id), data = ll))$coefficients[4,5]
+hmr[i] <<- summary(lmer(hmr ~ time*treatment+(1|id), data = ll))$coefficients[4,5]
+hml[i] <<- summary(lmer(hml ~ time*treatment+(1|id), data = ll))$coefficients[4,5]
+l[i] <<- summary(lmer(l ~ time*treatment+(1|id), data = ll))$coefficients[4,5]
+
+summary(lmer(p ~ time*treatment+(1|id), data = ll))$coefficients[4,1]
+
+
+
+}
+
+
+
+
+
+
+
+simr(20)
+
+
+mp = lmer(p ~ time*treatment+(1|id), data = ll)
+p[i] <<- summary(mp)$coefficients[4,5]
+aa = data.frame(VarCorr(mp))
+effectsizep[i] <<- summary(mp)$coefficients[4,1]/sqrt(aa[1,4]+aa[2,4])
+
+
+```
+
+
+```{r}
+a = rep(1,6)
+b = rep(1,6)
+c = rep(1,6)
+d = rep(1,6)
+e = rep(1,6)
+f = rep(1,6)
+draw_for_all = function(n1,n2,n3,n4,n5,n6){
+simr(n1)
+man1 = v4
+p1 = p
+h1 = h
+hmr1 = hmr
+hml1 = hml
+l1 = l
+simr(n2)
+man2 = v4
+p2 = p
+h2 = h
+hmr2 = hmr
+hml2 = hml
+l2 = l
+simr(n3)
+man3 = v4
+p3 = p
+h3 = h
+hmr3 = hmr
+hml3 = hml
+l3 = l
+
+simr(n4)
+man4 = v4
+p4 = p
+h4 = h
+hmr4 = hmr
+hml4 = hml
+l4 = l
+
+simr(n5)
+
+man5 = v4
+p5 = p
+h5 = h
+hmr5 = hmr
+hml5 = hml
+l5 = l
+
+simr(n6)
+
+man6 = v4
+p6 = p
+h6 = h
+hmr6 = hmr
+hml6 = hml
+l6 = l
+
+
+
+man1 <- data.frame(man1)
+p1 <- data.frame(p1)
+h1 <- data.frame(h1)
+hmr1 <- data.frame(hmr1)
+hml1 <- data.frame(hml1)
+l1 <- data.frame(l1)
+
+
+man <- cbind(man1,man2,man3,man4,man5,man6)
+p <- cbind(p1,p2,p3,p4,p5,p6)
+h <- cbind(h1,h2,h3,h4,h5,h6)
+hmr <- cbind(hmr1,hmr2,hmr3,hmr4,hmr5,hmr6)
+hml <- cbind(hml1,hml2,hml3,hml4,hml5,hml6)
+l <- cbind(l1,l2,l3,l4,l5,l6)
+
+
+mant <- data.frame(t(man))
+pt <- data.frame(t(p))
+ht <- data.frame(t(h))
+hmrt <- data.frame(t(hmr))
+hmlt <- data.frame(t(hml))
+lt <- data.frame(t(l))
+
+
+for(i in 1:6){
+  mant[i,] = ifelse(mant[i,]<0.05,1,0)
+  pt[i,] = ifelse(pt[i,]<0.01,1,0)
+  ht[i,] = ifelse(ht[i,]<0.01,1,0)
+  hmrt[i,] = ifelse(hmrt[i,]<0.01,1,0)
+  hmlt[i,] = ifelse(hmlt[i,]<0.01,1,0)
+  lt[i,] = ifelse(lt[i,]<0.01,1,0)
+}
+
+
+for (i in 1:6){
+a[i] <- sum(mant[i,])
+b[i] <- sum(pt[i,])
+c[i] <- sum(ht[i,])
+d[i] <- sum(hmrt[i,])
+e[i] <- sum(hmlt[i,])
+f[i] <- sum(lt[i,])
+}
+a <- data.frame(a)
+b <- data.frame(b)
+c <- data.frame(c)
+d <- data.frame(d)
+e <- data.frame(e)
+f <- data.frame(f)
+
+
+a$n = seq(from = 5, to = 30, by = 5)
+b$n = seq(from = 5, to = 30, by = 5)
+c$n = seq(from = 5, to = 30, by = 5)
+d$n = seq(from = 5, to = 30, by = 5)
+e$n = seq(from = 5, to = 30, by = 5)
+f$n = seq(from = 5, to = 30, by = 5)
+
+
+
+plotman <<- ggplot(a, aes(n, a))+ geom_point()+ylab("number of null hypothese rejected")+xlab("number of participants in each group")+geom_hline(yintercept = simulations*0.8)
+plotp <<- ggplot(b, aes(n, b))+ geom_point()+ylab("number of null hypothese rejected")+xlab("number of participants in each group")+geom_hline(yintercept = simulations*0.8)
+ploth <<- ggplot(c, aes(n, c))+ geom_point()+ylab("number of null hypothese rejected")+xlab("number of participants in each group")+geom_hline(yintercept = simulations*0.8)
+plothmr <<- ggplot(d, aes(n, d))+ geom_point()+ylab("number of null hypothese rejected")+xlab("number of participants in each group")+geom_hline(yintercept = simulations*0.8)
+plothml <<- ggplot(e, aes(n, e))+ geom_point()+ylab("number of null hypothese rejected")+xlab("number of participants in each group")+geom_hline(yintercept = simulations*0.8)
+plotl <<- ggplot(f, aes(n, f))+ geom_point()+ylab("number of null hypothese rejected")+xlab("number of participants in each group")+geom_hline(yintercept = simulations*0.8)
+}
+
+
+draw_for_all(5,10,15,20,25,30)
+
+plotman
+plotp
+ploth
+plothmr
+plothml
+plotl
+
+```
+
+
+
+```{r}
+#checking effect sizes.
+n = 1e+04
+
+
+simdata2 = data.frame(id = 1:n)
+simdata2$time = rep(0, n)
+simdata2$treatment = rep("control",n)
+
+simdata3 = data.frame(id = 1:n)
+simdata3$time = rep(1, n)
+simdata3$treatment = rep("control",n)
+
+simdata4 = data.frame(id = (n+1):(2*n))
+simdata4$time = rep(0, n)
+simdata4$treatment = rep("creatine",n)
+
+simdata5 = data.frame(id = (n+1):(n*2))
+simdata5$time = rep(1, n)
+simdata5$treatment = rep("creatine",n)
+
+ll <<- rbind(simdata2, simdata3, simdata4, simdata5)
+
+ll$treatment = as.factor(ll$treatment)
+ll$time = as.factor(ll$time)
+ll$id = as.factor(ll$id)
+
+
+
+c0 = rnorm(n, 67, 7)
+c1 = rnorm(n, c0, 1)
+t0 = rnorm(n, 67, 7)
+t1 = rnorm(n, t0+rnorm(n, 2, 2), 1)  
+
+p = ecdf(t1)
+p(67)
+(mean(t1)-mean(c1))/sqrt(((sd(t1)^2)+sd(c1)^2)/2)
+
+u = c(c0,c1,t0,t1)
+
+ll$bw = u
+
+c0 = rnorm(n, 20, 5)
+c1 = rnorm(n, c0, 1.5)
+t0 = rnorm(n, 20, 5)        
+t1 = rnorm(n, t0+rnorm(n, 1, 0.5), 1.5)  
+
+
+(mean(t1)-mean(c1))/sqrt(((sd(t1)^2)+sd(c1)^2)/2)
+
+u = c(c0,c1,t0,t1)
+
+ll$h = u
+
+c0 = rnorm(n, 10, 4)
+c1 = rnorm(n, c0, 1)
+t0 = rnorm(n, 10, 4)        
+t1 = rnorm(n, t0+rnorm(n,0.5,0.5), 1)  
+
+qq = ecdf(t1)
+qq(10)
+
+
+(mean(t1)-mean(c1))/sqrt(((sd(t1)^2)+sd(c1)^2)/2)
+
+u = c(c0,c1,t0,t1)
+ll$p = u
+ll$p = ll$p*ll$bw
+
+
+c0 = rnorm(n, 35, 17.5)
+c1 = rnorm(n, c0, 3)
+t0 = rnorm(n, 35, 17.5)        
+t1 = rnorm(n, t0+rnorm(n, 3.5, 1), 3)  
+
+qq = ecdf(t1)
+qq(35)
+
+
+(mean(t1)-mean(c1))/sqrt(((sd(t1)^2)+sd(c1)^2)/2)
+
+u = c(c0,c1,t0,t1)
+
+ll$hmr = u
+
+
+c0 = rnorm(n, 30, 15)
+c1 = rnorm(n, c0, 3)
+t0 = rnorm(n, 30, 15)        
+t1 = rnorm(n, t0+rnorm(n, 3, 1), 3)  
+
+(mean(t1)-mean(c1))/sqrt(((sd(t1)^2)+sd(c1)^2)/2)
+
+
+qq = ecdf(t1)
+qq(30)
+
+
+u = c(c0,c1,t0,t1)
+
+ll$hml = u
+
+c0 = rnorm(n, 25, 8)
+c1 = rnorm(n, c0, 2.5)
+t0 = rnorm(n, 25, 8)        
+t1 = rnorm(n, t0+rnorm(n, 2, 2), 2)  
+
+
+(mean(t1)-mean(c1))/sqrt(((sd(t1)^2)+sd(c1)^2)/2)
+
+qq = ecdf(t1)
+qq(25)
+
+u = c(c0,c1,t0,t1)
+
+ll$l = u
+
+c0 = rnorm(n, 15, 6)
+c1 = rnorm(n, c0, 2)
+t0 = rnorm(n, 15, 6)        
+t1 = rnorm(n, t0+rnorm(n, 1.3, 1), 2)  
+
+(mean(t1)-mean(c1))/sqrt(((sd(t1)^2)+sd(c1)^2)/2)
+
+
+qq = ecdf(t1)
+qq(15)
+
+u = c(c0,c1,t0,t1)
+
+ll$pir = u
+
+
+c0 = rnorm(n, 13, 5)
+c1 = rnorm(n, c0, 2)
+t0 = rnorm(n, 13, 5)        
+t1 = rnorm(n, t0+rnorm(n, 1.1, 0.8), 2)  
+
+(mean(t1)-mean(c1))/sqrt(((sd(t1)^2)+sd(c1)^2)/2)
+u = c(c0,c1,t0,t1)
+qq = ecdf(t1)
+qq(13)
+
+ll$pil = u
+
+n = 100000
+#hanging leg raises
+c0 = rnorm(n, 13, 4)
+c1 = rnorm(n, c0, 2)
+t0 = rnorm(n, 13, 4)        
+t1 = rnorm(n, t0+rnorm(n, 10, 65), 2)  
+
+u = c(c0,c1,t0,t1)
+
+(mean(t1)-mean(c1))/sqrt(((sd(t1)^2)+sd(c1)^2)/2)
+u = c(c0,c1,t0,t1)
+qq = ecdf(t1)
+qq(13)
+
+
+
+ll$hl = u
+
+c0 = rnorm(n, 20, 5)
+c1 = rnorm(n, c0, 2)
+t0 = rnorm(n, 20, 5)        
+t1 = rnorm(n, t0+rnorm(n, 1.5, 2), 2.5)  
+(mean(t1)-mean(c1))/sqrt(((sd(t1)^2)+sd(c1)^2)/2)
+qq = ecdf(t1)
+qq(20)
+
+u = c(c0,c1,t0,t1)
+
+ll$moves = u
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+```{r}
+#the real deal
+simulations = 1000
+pmk = rep(1,simulations)
+pmf = rep(1, simulations)
+pmkbw = rep(1,simulations)
+pmfbw = rep(1, simulations)
+pp = rep(1,simulations)
+ppbw = rep(1,simulations)
+ph= rep(1,simulations)
+phmr = rep(1,simulations)
+phml = rep(1,simulations)
+pll = rep(1,simulations)
+plr = rep(1,simulations)
+ppir = rep(1,simulations)
+ppil = rep(1,simulations)
+pbw = rep(1,simulations)
+effectsizep = rep(1,simulations)
+effectsizepbw = rep(1,simulations)
+effectsizehml = rep(1,simulations)
+effectsizeh = rep(1,simulations)
+effectsizehmr = rep(1,simulations)
+effectsizell = rep(1,simulations)
+effectsizelr = rep(1,simulations)
+effectsizepir = rep(1,simulations)
+effectsizepil = rep(1,simulations)
+effectsizebw = rep(1,simulations)
+
+sims = function(n){
+for (i in seq(simulations)){
+
+simdata2 = data.frame(id = 1:n)
+simdata2$time = rep(0, n)
+simdata2$treatment = rep("control",n)
+
+simdata3 = data.frame(id = 1:n)
+simdata3$time = rep(1, n)
+simdata3$treatment = rep("control",n)
+
+simdata4 = data.frame(id = (n+1):(2*n))
+simdata4$time = rep(0, n)
+simdata4$treatment = rep("creatine",n)
+
+simdata5 = data.frame(id = (n+1):(n*2))
+simdata5$time = rep(1, n)
+simdata5$treatment = rep("creatine",n)
+
+ll <<- rbind(simdata2, simdata3, simdata4, simdata5)
+
+ll$treatment = as.factor(ll$treatment)
+ll$time = as.factor(ll$time)
+ll$id = as.factor(ll$id)
+
+
+c0 = rnorm(n, 65, 7.5)
+c1 = rnorm(n, c0, 0.5)
+t0 = rnorm(n, 65, 7.5)        
+t1 = rnorm(n, t0+rnorm(n, 1, 0.7), 0.5)  
+
+u = c(c0,c1,t0,t1)
+
+ll$bw = u
+
+
+c0 = rnorm(n, 20, 5)
+c1 = rnorm(n, c0, 1.2)
+t0 = rnorm(n, 20, 5)        
+t1 = rnorm(n, t0+rnorm(n, 1.2, 0.3), 1.2)  
+
+
+u = c(c0,c1,t0,t1)
+
+ll$h = u
+#ll$he = ll$he*ll$bw
+
+c0 = rnorm(n, 10, 4)
+c1 = rnorm(n, c0, 1)
+t0 = rnorm(n, 10, 4)        
+t1 = rnorm(n, t0+rnorm(n,1,0.3), 1)  
+
+u = c(c0,c1,t0,t1)
+ll$p = u
+#ll$pe = ll$pe*ll$bw
+
+
+c0 = rnorm(n, 400, 150)
+c1 = rnorm(n, c0, 25)
+t0 = rnorm(n, 400, 150)        
+t1 = rnorm(n, t0+rnorm(n, 30, 15), 25)  
+
+u = c(c0,c1,t0,t1)
+
+ll$hmr = u
+
+
+
+c0 = rnorm(n, 400, 150)
+c1 = rnorm(n, c0, 25)
+t0 = rnorm(n, 400, 150)        
+t1 = rnorm(n, t0+rnorm(n, 30, 15), 25)  
+  
+u = c(c0,c1,t0,t1)
+
+ll$hml = u
+
+c0 = rnorm(n, 15, 4)
+c1 = rnorm(n, c0, 1)
+t0 = rnorm(n, 15, 4)        
+t1 = rnorm(n, t0+rnorm(n, 1, 0.3), 1)  
+
+u = c(c0,c1,t0,t1)
+
+ll$pir = u
+
+
+c0 = rnorm(n, 15, 4)
+c1 = rnorm(n, c0, 1)
+t0 = rnorm(n, 15, 4)        
+t1 = rnorm(n, t0+rnorm(n, 1, 0.3), 1)  
+
+u = c(c0,c1,t0,t1)
+
+ll$pil = u
+
+c0 = rnorm(n, 15, 4)
+c1 = rnorm(n, c0, 1)
+t0 = rnorm(n, 15, 4)        
+t1 = rnorm(n, t0+rnorm(n, 1, 0.3), 1)  
+
+u = c(c0,c1,t0,t1)
+
+ll$ll = u
+
+c0 = rnorm(n, 15, 4)
+c1 = rnorm(n, c0, 1)
+t0 = rnorm(n, 15, 4)        
+t1 = rnorm(n, t0+rnorm(n, 1, 0.3), 1)  
+
+u = c(c0,c1,t0,t1)
+
+ll$lr = u
+
+ll$pbw = ll$p/ll$bw
+ll$llbw = ll$ll/ll$bw
+ll$lrbw = ll$lr/ll$bw
+ll$hbw = ll$h/ll$bw
+ll$hmlbw = ll$hml/ll$bw
+ll$hmrbw = ll$hmr/ll$bw
+ll$pirbw = ll$pir/ll$bw
+ll$pilbw = ll$pil/ll$bw
+
+
+mk = manova(cbind(p, ll, lr) ~ time*treatment+ Error(id), data = ll)
+
+mkbw = manova(cbind(pbw, llbw, lrbw) ~ time*treatment+ Error(id), data = ll)
+
+mf = manova(cbind(h, hmr, hml, pir, pil) ~ time*treatment+ Error(id), data = ll)
+
+mfbw = manova(cbind(hbw, hmrbw, hmlbw, pirbw, pilbw) ~ time*treatment+ Error(id), data = ll)
+
+
+
+pmk[i] <<- summary(mk)[2]$`Error: Within`$stats[2,6]
+pmf[i]<<- summary(mf)[2]$`Error: Within`$stats[2,6]
+
+pmkbw[i] <<- summary(mkbw)[2]$`Error: Within`$stats[2,6]
+pmfbw[i]<<- summary(mfbw)[2]$`Error: Within`$stats[2,6]
+
+
+mbw = lmer(bw ~ time*treatment+(1|id), data = ll)
+pbw[i] <<- summary(mbw)$coefficients[4,5]
+aa = data.frame(VarCorr(mbw))
+effectsizebw[i] <<- summary(mbw)$coefficients[4,1]/sqrt(aa[1,4]+aa[2,4])
+
+
+mp = lmer(p ~ time*treatment+(1|id), data = ll)
+pp[i] <<- summary(mp)$coefficients[4,5]
+aa = data.frame(VarCorr(mp))
+effectsizep[i] <<- summary(mp)$coefficients[4,1]/sqrt(aa[1,4]+aa[2,4])
+
+mpbw = lmer(p ~ time*treatment+bw+(1|id), data = ll)
+ppbw[i] <<- summary(mpbw)$coefficients[4,5]
+aa = data.frame(VarCorr(mpbw))
+effectsizepbw[i] <<- summary(mpbw)$coefficients[4,1]/sqrt(aa[1,4]+aa[2,4])
+
+
+mh = lmer(h ~ time*treatment+(1|id), data = ll)
+ph[i] <<- summary(mh)$coefficients[4,5]
+aa = data.frame(VarCorr(mh))
+effectsizeh[i] <<- summary(mh)$coefficients[4,1]/sqrt(aa[1,4]+aa[2,4])
+
+mhmr = lmer(hmr ~ time*treatment+(1|id), data = ll)
+phmr[i] <<- summary(mhmr)$coefficients[4,5]
+aa = data.frame(VarCorr(mhmr))
+effectsizehmr[i] <<- summary(mhmr)$coefficients[4,1]/sqrt(aa[1,4]+aa[2,4])
+
+mhml = lmer(hml ~ time*treatment+(1|id), data = ll)
+phml[i] <<- summary(mhml)$coefficients[4,5]
+aa = data.frame(VarCorr(mhml))
+effectsizehml[i] <<- summary(mhml)$coefficients[4,1]/sqrt(aa[1,4]+aa[2,4])
+
+mll = lmer(ll ~ time*treatment+(1|id), data = ll)
+pll[i] <<- summary(mll)$coefficients[4,5]
+aa = data.frame(VarCorr(mll))
+effectsizell[i] <<- summary(mll)$coefficients[4,1]/sqrt(aa[1,4]+aa[2,4])
+
+mlr = lmer(ll ~ time*treatment+(1|id), data = ll)
+plr[i] <<- summary(mlr)$coefficients[4,5]
+aa = data.frame(VarCorr(mlr))
+effectsizelr[i] <<- summary(mlr)$coefficients[4,1]/sqrt(aa[1,4]+aa[2,4])
+
+mpir = lmer(pir ~ time*treatment+(1|id), data = ll)
+ppir[i] <<- summary(mpir)$coefficients[4,5]
+aa = data.frame(VarCorr(mpir))
+effectsizepir[i] <<- summary(mpir)$coefficients[4,1]/sqrt(aa[1,4]+aa[2,4])
+
+mpil = lmer(pil ~ time*treatment+(1|id), data = ll)
+ppil[i] <<- summary(mpil)$coefficients[4,5]
+aa = data.frame(VarCorr(mpil))
+effectsizepil[i] <<- summary(mpil)$coefficients[4,1]/sqrt(aa[1,4]+aa[2,4])
+
+
+}
+}
+
+sims(20)
+```
+
+
+```{r}
+o = data.frame(effectsizeh, effectsizehml, effectsizehmr, effectsizell, effectsizelr, effectsizep, effectsizepil, effectsizepir, effectsizebw)
+
+f = function(x){
+  list(mean(x),sd(x))
+}
+
+
+v = data.frame(sapply(o, f))
+
+
+
+oo = data.frame(ph,phml,phmr,pll,plr,pp,ppil,ppir,pbw)
+oof = data.frame(pmk, pmkbw, pmf, pmfbw, pp, ppbw)
+
+for (i in (1:9)){
+oo[,i] = ifelse(oo[,i]<0.05, 1,0)  
+}
+
+apply(oo, 2, sum)
+
+for (i in (1:6)){
+oof[,i] = ifelse(oof[,i]<0.05, 1,0)  
+}
+apply(oof, 2, sum)
+
+
+```
+
+
+```{r}
+ppe2000 = ppe
+phml2000 = phml
+effectsizehml2000 = effectsizehml
+effectsizepe2000 = effectsizepe
+
+
+a = rep(1,6)
+b = rep(1,6)
+c = rep(1,6)
+d = rep(1,6)
+e = rep(1,6)
+f = rep(1,6)
+g = rep(1,6)
+h = rep(1,6)
+q = rep(1,6)
+j = rep(1,6)
+l = rep(1,6)
+v  = rep(1,6)
+q = rep(1,6)
+y  = rep(1,6)
+
+
+
+draw_for_all2 = function(n1,n2,n3,n4,n5,n6){
+for (i in c(n1,n2,n3,n4,n5,n6)){
+sims(i)
+mk1 <- pmk
+data.frame(assign(paste("mk",i,sep = ""), mk1))
+mf1 <- pmf
+assign(paste("mf",i,sep = ""), mf1)
+
+mk1bw <- pmkbw
+data.frame(assign(paste("mkbw",i,sep = ""), mk1bw))
+mf1bw <- pmfbw
+assign(paste("mfbw",i,sep = ""), mf1bw)
+p1 = pp
+assign(paste("p",i,sep = ""), p1)
+h1 = ph
+assign(paste("h",i,sep = ""), h1)
+hmr1 = phmr
+assign(paste("hmr",i,sep = ""), hmr1)
+hml1 = phml
+assign(paste("hml",i,sep = ""), hml1)
+ll1 = pll
+assign(paste("ll",i,sep = ""), ll1)
+lr1 = plr
+assign(paste("lr",i,sep = ""), lr1)
+pir1 = ppir
+assign(paste("pir",i,sep = ""), pir1)
+pil1 = ppil
+assign(paste("pil",i,sep = ""), pil1)
+}
+
+mk1 <- data.frame(mk5)
+mf1 <- data.frame(mf5)
+mkbw1 <- data.frame(mkbw5)
+mfbw1 <- data.frame(mfbw5)
+p1 <- data.frame(p5)
+h1 <- data.frame(h5)
+hmr1 <- data.frame(hmr5)
+hml1 <- data.frame(hml5)
+ll1 <- data.frame(ll5)
+lr1 <- data.frame(lr5)
+pir1 <- data.frame(pir5)
+pil1 <- data.frame(pil5)
+
+
+mk <<- cbind(mk1,mk10,mk15,mk20,mk25,mk30)
+mf <<- cbind(mf1,mf10,mf15,mf20,mf25,mf30)
+mkbw <<- cbind(mkbw1,mkbw10,mkbw15,mkbw20,mkbw25,mkbw30)
+mfbw <<- cbind(mfbw1,mfbw10,mfbw15,mfbw20,mfbw25,mfbw30)
+p <<- cbind(p1,p10,p15,p20,p25,p30)
+h <<- cbind(h1,h10,h15,h20,h25,h30)
+hmr <<- cbind(hmr1,hmr10,hmr15,hmr20,hmr25,hmr30)
+hml <<- cbind(hml1,hml10,hml15,hml20,hml25,hml30)
+lr <<- cbind(lr1,lr10,lr15,lr20,lr25,lr30)
+ll <<- cbind(ll1,ll10,ll15,ll20,ll25,ll30)
+pir <<- cbind(pir1,pir10,pir15,pir20,pir25,pir30)
+pil <<- cbind(pil1,pil10,pil15,pil20,pil25,pil30)
+
+
+mkt <- data.frame(t(mk))
+mft <- data.frame(t(mf))
+mkbwt <- data.frame(t(mkbw))
+mfbwt <- data.frame(t(mfbw))
+pt <- data.frame(t(p))
+ht <- data.frame(t(h))
+hmrt <- data.frame(t(hmr))
+hmlt <- data.frame(t(hml))
+llt <- data.frame(t(ll))
+lrt <- data.frame(t(lr))
+pirt <- data.frame(t(pir))
+pilt <- data.frame(t(pil))
+
+
+
+
+for(i in 1:6){
+  mkt[i,] = ifelse(mkt[i,]<0.05,1,0)
+  mft[i,] = ifelse(mft[i,]<0.05,1,0)
+  mkbwt[i,] = ifelse(mkbwt[i,]<0.05,1,0)
+  mfbwt[i,] = ifelse(mfbwt[i,]<0.05,1,0)
+  pt[i,] = ifelse(pt[i,]<0.00625,1,0)
+  ht[i,] = ifelse(ht[i,]<0.008333333,1,0)
+  hmrt[i,] = ifelse(hmrt[i,]<0.01,1,0)
+  hmlt[i,] = ifelse(hmlt[i,]<0.0125,1,0)
+  llt[i,] = ifelse(llt[i,]<0.01666667,1,0)
+  lrt[i,] = ifelse(lrt[i,]<0.01666667,1,0)
+  pirt[i,] = ifelse(pirt[i,]<0.025,1,0)
+  pilt[i,] = ifelse(pilt[i,]<0.05,1,0)
+}
+
+
+
+for (i in 1:6){
+a[i] <- sum(mkt[i,])
+b[i] <- sum(mft[i,])
+c[i] <- sum(pt[i,])
+e[i] <- sum(ht[i,])
+f[i] <- sum(hmrt[i,])
+g[i] <- sum(hmlt[i,])
+v[i] <- sum(llt[i,])
+d[i] <- sum(lrt[i,])
+j[i] <- sum(pirt[i,])
+l[i] <- sum(pilt[i,])
+q[i] <- sum(mkbwt[i,])
+y[i] <- sum(mfbwt[i,])
+
+}
+
+a <- data.frame(a)
+b <- data.frame(b)
+c <- data.frame(c)
+d <- data.frame(d)
+e <- data.frame(e)
+f <- data.frame(f)
+g <- data.frame(g)
+v <- data.frame(v)
+q <- data.frame(q)
+j <- data.frame(j)
+l <- data.frame(l)
+q <- data.frame(q)
+y <- data.frame(y)
+
+
+
+a$n = seq(from = 5, to = 30, by = 5)
+b$n = seq(from = 5, to = 30, by = 5)
+c$n = seq(from = 5, to = 30, by = 5)
+d$n = seq(from = 5, to = 30, by = 5)
+e$n = seq(from = 5, to = 30, by = 5)
+f$n = seq(from = 5, to = 30, by = 5)
+g$n = seq(from = 5, to = 30, by = 5)
+v$n = seq(from = 5, to = 30, by = 5)
+q$n = seq(from = 5, to = 30, by = 5)
+j$n = seq(from = 5, to = 30, by = 5)
+l$n = seq(from = 5, to = 30, by = 5)
+q$n = seq(from = 5, to = 30, by = 5)
+y$n = seq(from = 5, to = 30, by = 5)
+
+
+
+plotmk <<- ggplot(a, aes(n, a))+ geom_point()+ylab("number of null hypothese rejected")+xlab("number of participants in each group")+geom_hline(yintercept = simulations*0.8)+ggtitle("power for manova krops")
+plotmf <<- ggplot(b, aes(n, b))+ geom_point()+ylab("number of null hypothese rejected")+xlab("number of participants in each group")+geom_hline(yintercept = simulations*0.8)+ggtitle("power for manova finger")
+
+plotmkbw <<- ggplot(q, aes(n, q))+ geom_point()+ylab("number of null hypothese rejected")+xlab("number of participants in each group")+geom_hline(yintercept = simulations*0.8)+ggtitle("power for manova krops (bw)")
+plotmfbw <<- ggplot(y, aes(n, y))+ geom_point()+ylab("number of null hypothese rejected")+xlab("number of participants in each group")+geom_hline(yintercept = simulations*0.8)+ggtitle("power for manova finger (bw)")
+
+plotp <<- ggplot(c, aes(n, c))+ geom_point()+ylab("number of null hypothese rejected")+xlab("number of participants in each group")+geom_hline(yintercept = simulations*0.8)+ggtitle("power for pull up enduance")
+ploth <<- ggplot(e, aes(n, e))+ geom_point()+ylab("number of null hypothese rejected")+xlab("number of participants in each group")+geom_hline(yintercept = simulations*0.8)+ggtitle("power for hang enduance")
+plothmr <<- ggplot(f, aes(n, f))+ geom_point()+ylab("number of null hypothese rejected")+xlab("number of participants in each group")+geom_hline(yintercept = simulations*0.8)+ggtitle("power for max hang strength right")
+plothml <<- ggplot(g, aes(n, g))+ geom_point()+ylab("number of null hypothese rejected")+xlab("number of participants in each group")+geom_hline(yintercept = simulations*0.8)+ggtitle("power for max hang strength left")
+plotll <<- ggplot(v, aes(n, v))+ geom_point()+ylab("number of null hypothese rejected")+xlab("number of participants in each group")+geom_hline(yintercept = simulations*0.8)+ggtitle("power for lock off left strength")
+plotlr <<- ggplot(d, aes(n, d))+ geom_point()+ylab("number of null hypothese rejected")+xlab("number of participants in each group")+geom_hline(yintercept = simulations*0.8)+ggtitle("power for lock off right strength")
+plotpir <<- ggplot(j, aes(n, j))+ geom_point()+ylab("number of null hypothese rejected")+xlab("number of participants in each group")+geom_hline(yintercept = simulations*0.8)+ggtitle("pinch right")
+plotpil <<- ggplot(l, aes(n, l))+ geom_point()+ylab("number of null hypothese rejected")+xlab("number of participants in each group")+geom_hline(yintercept = simulations*0.8)+ggtitle("pinch left")
+}
+
+draw_for_all2(5,10,15,20,25,30)
+
+plotmkbw
+plotmfbw
+plotmk
+plotmf
+plotp
+ploth
+plothmr
+plothml
+plotll
+plotlr
+plotpir
+plotpil
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#```{r}
+
+#without pull up strength:
+
+
+simulations = 100
+
+me = rep(1,simulations)
+ms = rep(1, simulations)
+pe = rep(1,simulations)
+ps = rep(1,simulations)
+he= rep(1,simulations)
+hmr = rep(1,simulations)
+hml = rep(1,simulations)
+le = rep(1,simulations)
+ls = rep(1,simulations)
+moves = rep(1,simulations)
+
+
+sims = function(n){
+for (i in seq(simulations)){
+
+simdata2 = data.frame(id = 1:n)
+simdata2$time = rep(0, n)
+simdata2$treatment = rep("control",n)
+
+simdata3 = data.frame(id = 1:n)
+simdata3$time = rep(1, n)
+simdata3$treatment = rep("control",n)
+
+simdata4 = data.frame(id = (n+1):(2*n))
+simdata4$time = rep(0, n)
+simdata4$treatment = rep("creatine",n)
+
+simdata5 = data.frame(id = (n+1):(n*2))
+simdata5$time = rep(1, n)
+simdata5$treatment = rep("creatine",n)
+
+ll <<- rbind(simdata2, simdata3, simdata4, simdata5)
+
+ll$treatment = as.factor(ll$treatment)
+ll$time = as.factor(ll$time)
+ll$id = as.factor(ll$id)
+
+
+
+c0 = rnorm(n, 67, 7)
+c1 = rnorm(n, c0, 1)
+t0 = rnorm(n, 67, 7)        
+t1 = rnorm(n, t0+rnorm(n, 1, 1), 1)  
+
+u = c(c0,c1,t0,t1)
+
+ll$bw = u
+
+
+c0 = rnorm(n, 17, 5)
+c1 = rnorm(n, c0, 1.5)
+t0 = rnorm(n, 17, 5)        
+t1 = rnorm(n, t0+rnorm(n, 1, 1), 1.5)  
+
+
+u = c(c0,c1,t0,t1)
+
+ll$he = u
+ll$he = ll$he*ll$bw
+
+c0 = rnorm(n, 10, 4)
+c1 = rnorm(n, c0, 2)
+t0 = rnorm(n, 10, 4)        
+t1 = rnorm(n, t0+rnorm(n,1,1), 2)  
+
+u = c(c0,c1,t0,t1)
+ll$pe = u
+ll$pe = ll$pe*ll$bw
+
+c0 = rnorm(n, 30, 10)
+c1 = rnorm(n, c0, 4)
+t0 = rnorm(n, 30, 10)        
+t1 = rnorm(n, t0+rnorm(n,3,3), 2)  
+
+
+u = c(c0,c1,t0,t1)
+ll$ps = u
+ll$ps = ll$ps*ll$bw
+
+
+
+c0 = rnorm(n, 35, 17.5)
+c1 = rnorm(n, c0, 3)
+t0 = rnorm(n, 35, 17.5)        
+t1 = rnorm(n, t0+rnorm(n, 3, 2), 3)  
+
+u = c(c0,c1,t0,t1)
+
+ll$hmr = u
+
+
+
+c0 = rnorm(n, 30, 15)
+c1 = rnorm(n, c0, 3)
+t0 = rnorm(n, 30, 15)        
+t1 = rnorm(n, t0+rnorm(n, 3, 2), 3)  
+
+u = c(c0,c1,t0,t1)
+
+ll$hml = u
+
+c0 = rnorm(n, 25, 8)
+c1 = rnorm(n, c0, 2.5)
+t0 = rnorm(n, 25, 8)        
+t1 = rnorm(n, t0+rnorm(n, 2, 2), 2)  
+
+u = c(c0,c1,t0,t1)
+
+ll$le = u
+
+c0 = rnorm(n, 10, 3)
+c1 = rnorm(n, c0, 1.5)
+t0 = rnorm(n, 10, 3)        
+t1 = rnorm(n, t0+rnorm(n, 1, 1), 1)  
+
+u = c(c0,c1,t0,t1)
+
+ll$ls = u
+
+c0 = rnorm(n, 20, 5)
+c1 = rnorm(n, c0, 2)
+t0 = rnorm(n, 20, 5)        
+t1 = rnorm(n, t0+rnorm(n, 2, 2), 2.5)  
+
+u = c(c0,c1,t0,t1)
+
+ll$moves = u
+
+
+m1 = manova(cbind(pe, he) ~ time*treatment+ Error(id), data = ll)
+m2 = manova(cbind(ps, hmr, hml, ls) ~ time*treatment+ Error(id), data = ll)
+
+me[i] <<- summary(m1)[2]$`Error: Within`$stats[2,6]
+ms[i]<<- summary(m2)[2]$`Error: Within`$stats[2,6]
+
+
+
+pe[i] <<- summary(lmer(pe ~ time*treatment+(1|id), data = ll))$coefficients[4,5]
+ps[i] <<- summary(lmer(ps ~ time*treatment+(1|id), data = ll))$coefficients[4,5]
+he[i] <<- summary(lmer(he ~ time*treatment+(1|id), data = ll))$coefficients[4,5]
+hmr[i] <<- summary(lmer(hmr ~ time*treatment+(1|id), data = ll))$coefficients[4,5]
+hml[i] <<- summary(lmer(hml ~ time*treatment+(1|id), data = ll))$coefficients[4,5]
+le[i] <<- summary(lmer(le ~ time*treatment+(1|id), data = ll))$coefficients[4,5]
+ls[i] <<- summary(lmer(ls ~ time*treatment+(1|id), data = ll))$coefficients[4,5]
+moves[i] <<- summary(lmer(moves ~ time*treatment+(1|id), data = ll))$coefficients[4,5]
+
+
+}
+}
+
+
+
+
+
+
+
+a = rep(1,6)
+b = rep(1,6)
+c = rep(1,6)
+e = rep(1,6)
+f = rep(1,6)
+g = rep(1,6)
+h = rep(1,6)
+q = rep(1,6)
+j = rep(1,6)
+
+
+
+draw_for_all1 = function(n1,n2,n3,n4,n5,n6){
+sims(n1)
+me1 = me
+ms1 = ms
+pe1 = pe
+he1 = he
+hmr1 = hmr
+hml1 = hml
+le1 = le
+ls1 = ls
+moves1 = moves
+sims(n2)
+me2 = me
+ms2 = ms
+pe2 = pe
+he2 = he
+hmr2 = hmr
+hml2 = hml
+le2 = le
+ls2 = ls
+moves2 = moves
+sims(n3)
+me3 = me
+ms3 = ms
+pe3 = pe
+he3 = he
+hmr3 = hmr
+hml3 = hml
+le3 = le
+ls3 = ls
+moves3 = moves
+sims(n4)
+me4 = me
+ms4 = ms
+pe4 = pe
+he4 = he
+hmr4 = hmr
+hml4 = hml
+le4 = le
+ls4 = ls
+moves4 = moves
+sims(n5)
+me5 = me
+ms5 = ms
+pe5 = pe
+he5 = he
+hmr5 = hmr
+hml5 = hml
+le5 = le
+ls5 = ls
+moves5 = moves
+
+sims(n6)
+
+me6 = me
+ms6 = ms
+pe6 = pe
+he6 = he
+hmr6 = hmr
+hml6 = hml
+le6 = le
+ls6 = ls
+moves6 = moves
+
+
+
+me1 <- data.frame(me1)
+ms1 <- data.frame(ms1)
+pe1 <- data.frame(pe1)
+he1 <- data.frame(he1)
+hmr1 <- data.frame(hmr1)
+hml1 <- data.frame(hml1)
+le1 <- data.frame(le1)
+ls1 <- data.frame(ls1)
+moves1 <-data.frame(moves1)
+
+
+
+
+me <- cbind(me1,me2,me3,me4,me5,me6)
+ms <- cbind(ms1,ms2,ms3,ms4,ms5,ms6)
+pe <- cbind(pe1,pe2,pe3,pe4,pe5,pe6)
+he <- cbind(he1,he2,he3,he4,he5,he6)
+hmr <- cbind(hmr1,hmr2,hmr3,hmr4,hmr5,hmr6)
+hml <- cbind(hml1,hml2,hml3,hml4,hml5,hml6)
+le <- cbind(le1,le2,le3,le4,le5,le6)
+ls <- cbind(ls1,ls2,ls3,ls4,ls5,ls6)
+moves <- cbind(moves1, moves2, moves3, moves4, moves5, moves6)
+
+
+met <- data.frame(t(me))
+mst <- data.frame(t(ms))
+pet <- data.frame(t(pe))
+het <- data.frame(t(he))
+hmrt <- data.frame(t(hmr))
+hmlt <- data.frame(t(hml))
+let <- data.frame(t(le))
+lst <- data.frame(t(ls))
+movest <- data.frame(t(moves))
+
+
+for(i in 1:6){
+  met[i,] = ifelse(met[i,]<0.05,1,0)
+  mst[i,] = ifelse(mst[i,]<0.05,1,0)
+  pet[i,] = ifelse(pet[i,]<0.05,1,0)
+  het[i,] = ifelse(het[i,]<0.05,1,0)
+  hmrt[i,] = ifelse(hmrt[i,]<0.05,1,0)
+  hmlt[i,] = ifelse(hmlt[i,]<0.05,1,0)
+  let[i,] = ifelse(let[i,]<0.05,1,0)
+  lst[i,] = ifelse(lst[i,]<0.05,1,0)
+  movest[i,] = ifelse(movest[i,]<0.05,1,0)
+}
+
+
+for (i in 1:6){
+a[i] <- sum(met[i,])
+b[i] <- sum(mst[i,])
+c[i] <- sum(pet[i,])
+e[i] <- sum(het[i,])
+f[i] <- sum(hmrt[i,])
+g[i] <- sum(hmlt[i,])
+h[i] <- sum(let[i,])
+q[i] <- sum(lst[i,])
+j[i] <- sum(movest[i,])
+
+
+}
+a <- data.frame(a)
+b <- data.frame(b)
+c <- data.frame(c)
+e <- data.frame(e)
+f <- data.frame(f)
+g <- data.frame(g)
+h <- data.frame(h)
+q <- data.frame(q)
+j <- data.frame(j)
+
+
+a$n = seq(from = 5, to = 30, by = 5)
+b$n = seq(from = 5, to = 30, by = 5)
+c$n = seq(from = 5, to = 30, by = 5)
+e$n = seq(from = 5, to = 30, by = 5)
+f$n = seq(from = 5, to = 30, by = 5)
+g$n = seq(from = 5, to = 30, by = 5)
+h$n = seq(from = 5, to = 30, by = 5)
+q$n = seq(from = 5, to = 30, by = 5)
+j$n = seq(from = 5, to = 30, by = 5)
+
+plotme <<- ggplot(a, aes(n, a))+ geom_point()+ylab("number of null hypothese rejected")+xlab("number of participants in each group")+geom_hline(yintercept = simulations*0.8)+ggtitle("power for manova enduance")
+plotms <<- ggplot(b, aes(n, b))+ geom_point()+ylab("number of null hypothese rejected")+xlab("number of participants in each group")+geom_hline(yintercept = simulations*0.8)+ggtitle("power for manova strength")
+plotpe <<- ggplot(c, aes(n, c))+ geom_point()+ylab("number of null hypothese rejected")+xlab("number of participants in each group")+geom_hline(yintercept = simulations*0.8)+ggtitle("power for pull up enduance")
+plothe <<- ggplot(e, aes(n, e))+ geom_point()+ylab("number of null hypothese rejected")+xlab("number of participants in each group")+geom_hline(yintercept = simulations*0.8)+ggtitle("power for hang enduance")
+plothmr <<- ggplot(f, aes(n, f))+ geom_point()+ylab("number of null hypothese rejected")+xlab("number of participants in each group")+geom_hline(yintercept = simulations*0.8)+ggtitle("power for max hang strength right")
+plothml <<- ggplot(g, aes(n, g))+ geom_point()+ylab("number of null hypothese rejected")+xlab("number of participants in each group")+geom_hline(yintercept = simulations*0.8)+ggtitle("power for max hang strength left")
+plotle <<- ggplot(h, aes(n, h))+ geom_point()+ylab("number of null hypothese rejected")+xlab("number of participants in each group")+geom_hline(yintercept = simulations*0.8)+ggtitle("power for lock off enduance")
+plotls <<- ggplot(q, aes(n, q))+ geom_point()+ylab("number of null hypothese rejected")+xlab("number of participants in each group")+geom_hline(yintercept = simulations*0.8)+ggtitle("power for lock off strength")
+plotmoves <<- ggplot(j, aes(n, j))+ geom_point()+ylab("number of null hypothese rejected")+xlab("number of participants in each group")+geom_hline(yintercept = simulations*0.8)+ggtitle("power for moves enduance")
+
+
+}
+
+
+draw_for_all1(5,10,15,20,25,30)
+
+
+plotme
+plotms
+plotpe
+plothe
+plothmr
+plothml
+plotle
+plotls
+plotmoves
+
+```
+
+
+
+
+
+
