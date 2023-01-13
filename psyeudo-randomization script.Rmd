@@ -1,0 +1,78 @@
+---
+title: "psyeudo-randomization"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(sjmisc)
+library(lmerTest)
+library(DescTools)
+```
+
+
+```{r}
+#testdata:
+
+data = read.csv("participants_final.v2.csv")
+
+
+test = data.frame(age = round(rnorm(40, 24, 5)), exp = abs(round(rnorm(40, 5, 2))), gen = rnorm(40), bw = rnorm(40, 64, 5))
+
+test$gen = ifelse(test$gen>0, "F", "M")
+test$id = 1:40
+
+random = function(data){
+  
+  creatine <<- sample_frac(data, 0.5)
+  malto <<- data[-creatine$id,]
+
+  #tests.
+  
+ifelse(t.test(creatine$age, malto$age)[3]$p.value<0.05, "run it again",
+    ifelse(t.test(creatine$exp, malto$exp)[3]$p.value<0.05, "run it again",
+    ifelse(t.test(creatine$bw, malto$bw)[3]$p.value<0.05, "run it again",
+    "sucess")))
+}
+
+random(test)
+
+```
+
+
+
+
+
+```{r}
+
+random = function(data){
+  
+  creatine <<- sample_frac(data, 0.5)
+  malto <<- data[-creatine$ï..participant_id,]
+
+  #tests.
+p = 0.5
+ifelse(t.test(creatine$max_pull_up2, malto$max_pull_up2)[3]$p.value<p, "run it again",
+    ifelse(t.test(creatine$alder2, malto$alder2)[3]$p.value<p, "run it again",
+    ifelse(t.test(creatine$klatre_r2, malto$klatre_r2)[3]$p.value<p, "run it again",
+    "sucess")))
+}
+
+random(data)
+malto$gruppe = as.factor(1)
+creatine$gruppe = as.factor(2)
+df = rbind(malto,creatine)
+df %>% ggplot(aes(max_pull_up2, fill = gruppe))+geom_boxplot()
+df %>% ggplot(aes(alder2, fill = gruppe))+geom_boxplot()
+df %>% ggplot(aes(klatre_r2, fill = gruppe))+geom_histogram(position = "dodge")
+LeveneTest(klatre_r2~gruppe, data = df)
+
+df %>% group_by(gruppe) %>% summarize(sd = sd(klatre_r2)^2, mean = mean(klatre_r2))
+df %>% group_by(gruppe) %>% summarize(n())
+
+
+
+```
+
+

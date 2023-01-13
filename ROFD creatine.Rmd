@@ -1,0 +1,1165 @@
+---
+title: "ROFD creatine"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+## R Markdown
+
+
+```{r}
+# to der er fucked en hvor participant er C og en hvor den er Ch
+#i = 116 = 14cv2 
+#i = 117 = 14ch3
+setwd('C:/Users/Jespe/OneDrive/Dokumenter/GitHub/Creatine-study/realdeal/ROFD/ROFD data')
+
+temp = list.files(pattern="*.csv")
+myfiles = lapply(temp, read.csv)
+
+ff = as.data.frame(NULL)
+
+for (i in seq(myfiles)){
+p = as.data.frame(myfiles[i])
+
+if(i == 113){
+  p[1,3] = "14cv2"
+}
+if(i == 114){
+  p[1,3] = "14ch3"
+}  
+  
+if(i == 42){
+  p[1,3] = "47cv2"
+}  
+if(i == 47){
+  p[1,3] = "64ch1"
+}  
+if(i == 70){
+  p[1,3] = "59pv2"
+}
+
+if(i == 76){
+  p[1,3] = "39ph2"
+}
+
+if(i == 78){
+  p[1,3] = "39pv2"
+}
+
+if (is.na(nchar((p[1,3]))) == T){
+  print(i)
+  print(temp[i])
+  participant = substr(p[1,1], start = 34, stop = 35)
+  test = substr(p[1,1], start = 36, stop = 37)
+  testnumber = substr(p[1,1], start = 38, stop = 38)
+  p = p[-c(1,2),c(1,2)]
+  p$test = test
+  p$participant = participant
+  p$testnumber = testnumber
+  next
+}
+  
+
+
+if (nchar((p[1,3])) > 4){
+participant = substr(p[1,3], start = 1, stop = 2)
+test = substr(p[1,3], start = 3, stop = 4)
+testnumber = substr(p[1,3], start = 5, stop = 5)
+p = p[-c(1,2),c(1,2)]
+p$test = test
+p$participant = participant
+p$testnumber = testnumber
+
+} else {
+participant = substr(p[1,3], start = 1, stop = 1)
+test = substr(p[1,3], start = 2, stop = 3)
+testnumber = substr(p[1,3], start = 4, stop = 4)
+p = p[-c(1,2),c(1,2)]
+p$test = test
+p$participant = participant
+p$testnumber = testnumber
+}
+
+
+ff = rbind(ff,p)
+}
+
+
+ff$test = as.factor(ff$test)
+
+ff$participant = as.factor(ff$participant)
+
+ff$testnumber = as.factor(ff$testnumber)
+
+unique(ff$participant)
+
+```
+
+```{r}
+setwd('C:/Users/Jespe/OneDrive/Dokumenter/GitHub/Creatine-study/realdeal/ROFD/ROFD for mandag participants')
+
+temp = list.files(pattern="*.csv")
+myfiles = lapply(temp, read.csv)
+
+ff2 = as.data.frame(NULL)
+for (i in seq(myfiles)){
+  
+p = as.data.frame(myfiles[i])
+p = p[-c(1,2),c(1,2)]
+
+if (nchar((temp[i])) > 8){
+participant = substr(temp[i], start = 1, stop = 2)
+test = substr(temp[i], start = 3, stop = 4)
+testnumber = substr(temp[i], start = 5, stop = 5)
+p$test = test
+p$participant = participant
+p$testnumber = testnumber
+} else {
+participant = substr(temp[i], start = 1, stop = 1)
+test = substr(temp[i], start = 2, stop = 3)
+testnumber = substr(temp[i], start = 4, stop = 4)
+p$test = test
+p$participant = participant
+p$testnumber = testnumber
+  
+  
+  
+}
+
+ff2 = rbind(ff2,p)
+}
+
+ff2$test = as.factor(ff2$test)
+
+ff2$participant = as.factor(ff2$participant)
+
+ff2$testnumber = as.factor(ff2$testnumber)
+
+unique(ff2$participant)
+```
+
+
+
+
+
+```{r}
+df = rbind(ff,ff2)
+df$date = as.numeric(df$date)
+df$tag = as.numeric(df$tag)
+
+
+df %>% filter(test == "ch") %>% ggplot(aes(date,tag, col = testnumber))+geom_line()+facet_wrap(~participant)
+df %>% filter(test == "cv") %>% ggplot(aes(date,tag, col = testnumber))+geom_line()+facet_wrap(~participant)
+
+length(unique(df$participant))
+
+```
+
+
+```{r}
+setwd('C:/Users/Jespe/OneDrive/Dokumenter/GitHub/Creatine-study/realdeal/ROFD/D dag 1')
+
+temp = list.files(pattern="*.csv")
+myfiles = lapply(temp, read.csv)
+
+ff2 = as.data.frame(NULL)
+for (i in seq(myfiles)){
+p = as.data.frame(myfiles[i])
+
+
+if(i == 32){
+  p[1,3] = "70pv2"
+}
+
+
+if (is.na(nchar((p[1,3]))) == T){
+  print(i)
+  print(temp[i])
+  participant = substr(p[1,1], start = 34, stop = 35)
+  test = substr(p[1,1], start = 36, stop = 37)
+  testnumber = substr(p[1,1], start = 38, stop = 38)
+  p = p[-c(1,2),c(1,2)]
+  p$test = test
+  p$participant = participant
+  p$testnumber = testnumber
+  next
+}
+  
+
+
+if (nchar((p[1,3])) > 4){
+participant = substr(p[1,3], start = 1, stop = 2)
+test = substr(p[1,3], start = 3, stop = 4)
+testnumber = substr(p[1,3], start = 5, stop = 5)
+p = p[-c(1,2),c(1,2)]
+p$test = test
+p$participant = participant
+p$testnumber = testnumber
+
+} else {
+participant = substr(p[1,3], start = 1, stop = 1)
+test = substr(p[1,3], start = 2, stop = 3)
+testnumber = substr(p[1,3], start = 4, stop = 4)
+p = p[-c(1,2),c(1,2)]
+p$test = test
+p$participant = participant
+p$testnumber = testnumber
+}
+
+ff2 = rbind(ff2,p)
+  
+}
+
+ff2$test = as.factor(ff2$test)
+
+ff2$participant = as.factor(ff2$participant)
+
+ff2$testnumber = as.factor(ff2$testnumber)
+
+unique(ff2$participant)
+
+
+qq = ff2 %>% group_by(participant, testnumber, test) %>% summarize(n=n())
+qq %>% group_by(participant) %>% summarize(n())
+
+```
+
+
+
+```{r}
+setwd("C:/Users/Jespe/OneDrive/Dokumenter/GitHub/Creatine-study/realdeal/ROFD/P")
+
+temp = list.files(pattern="*.csv")
+myfiles = lapply(temp, read.csv)
+
+ff4 = as.data.frame(NULL)
+
+for (i in seq(myfiles)){
+p = as.data.frame(myfiles[i])
+
+
+if (i == 1){
+participant = 100
+test = substr(p[1,3], start = 4, stop = 5)
+testnumber = substr(p[1,3], start = 6, stop = 6)
+p = p[-c(1,2),c(1,2)]
+p$test = test
+p$participant = participant
+p$testnumber = testnumber
+
+} else {
+participant = 100
+test = substr(p[1,3], start = 3, stop = 4)
+testnumber = substr(p[1,3], start = 5, stop = 5)
+p = p[-c(1,2),c(1,2)]
+p$test = test
+p$participant = participant
+p$testnumber = testnumber
+}
+
+
+ff4 = rbind(ff4,p)
+}
+
+
+
+ff4$participant = as.factor(ff4$participant)
+
+ff4$testnumber = as.factor(ff4$testnumber)
+
+ff4$test = as.character(ff4$test)
+
+ff4$test = ifelse(ff4$test == "hc", a<-"ch",ff4$test)
+ff4$test = as.factor(ff4$test)
+ff4$date = as.numeric(ff4$date)
+ff4$tag = as.numeric(ff4$tag)
+
+```
+
+
+
+
+
+
+
+
+```{r}
+df = rbind(df,ff2,ff4)
+df$date = as.numeric(df$date)
+df$tag = as.numeric(df$tag)
+df$test = as.character(df$test)
+df$test = ifelse(df$test == "hp", a<-"ph",df$test)
+df$test = as.factor(df$test)
+str(df$test)
+
+df %>% filter(test == "ch") %>% ggplot(aes(date,tag, col = testnumber))+geom_line()+facet_wrap(~participant)
+df %>% filter(test == "cv") %>% ggplot(aes(date,tag, col = testnumber))+geom_line()+facet_wrap(~participant)
+
+length(unique(df$participant))
+```
+
+
+
+```{r}
+#time = 2 (post)
+setwd("C:/Users/Jespe/OneDrive/Dokumenter/GitHub/Creatine-study/realdeal/ROFD/ROFD x2")
+
+temp = list.files(pattern="*.csv")
+myfiles = lapply(temp, read.csv)
+
+ff3 = as.data.frame(NULL)
+i = 9
+for (i in seq(myfiles)){
+p = as.data.frame(myfiles[i])
+
+if(i == 90){
+  p[1,3] = "8scv1"
+}
+
+if(i == 7){
+  p[1,3] = "58spv1"
+}
+
+if(i == 106){
+  p[1,3] = "39scv2"
+}
+
+if(i == 117){
+  p[1,3] = "29spv1"
+}
+
+if(i == 30){
+  p[1,3] = "22spv1"
+}
+
+if(i == 121){
+  p[1,3] = "42scv1"
+}
+
+if(i == 148){
+  p[1,3] = "43scv1"
+}
+
+if(i == 122){
+  p[1,3] = "42scv2"
+}
+
+if(i == 168){
+  p[1,3] = "16spv1"
+}
+if(i == 169){
+  p[1,3] = "16spv2"
+}
+
+if (is.na(nchar((p[1,3]))) == T){
+  participant = substr(p[1,1], start = 34, stop = 35)
+  test = substr(p[1,1], start = 36, stop = 37)
+  testnumber = substr(p[1,1], start = 38, stop = 38)
+  print(i)
+  p = p[-c(1,2),c(1,2)]
+  p$test = test
+  p$participant = participant
+  p$testnumber = testnumber
+  next
+}
+  
+
+
+if (nchar((p[1,3])) > 5){
+participant = substr(p[1,3], start = 1, stop = 2)
+test = substr(p[1,3], start = 4, stop = 5)
+testnumber = substr(p[1,3], start = 6, stop = 6)
+p = p[-c(1,2),c(1,2)]
+p$test = test
+p$participant = participant
+p$testnumber = testnumber
+
+} else {
+participant = substr(p[1,3], start = 1, stop = 1)
+test = substr(p[1,3], start = 3, stop = 4)
+testnumber = substr(p[1,3], start = 5, stop = 5)
+p = p[-c(1,2),c(1,2)]
+p$test = test
+p$participant = participant
+p$testnumber = testnumber
+}
+
+if (participant == 3){
+  print("cow")
+  print(i)
+}
+
+
+
+ff3 = rbind(ff3,p)
+}
+
+
+
+ff3$participant = as.factor(ff3$participant)
+
+ff3$testnumber = as.factor(ff3$testnumber)
+
+length(unique(ff3$participant))
+
+unique(ff3$test)
+ff3$test = as.character(ff3$test)
+
+ff3$test = ifelse(ff3$test == "hc", a<-"ch",ff3$test)
+ff3$test = as.factor(ff3$test)
+ff3$date = as.numeric(ff3$date)
+ff3$tag = as.numeric(ff3$tag)
+
+```
+
+
+
+
+```{r}
+ff3 %>% filter(test == "ch") %>% ggplot(aes(date,tag, col = testnumber))+geom_line()+facet_wrap(~participant)
+ff3 %>% filter(test == "cv") %>% ggplot(aes(date,tag, col = testnumber))+geom_line()+facet_wrap(~participant)
+
+```
+
+
+
+
+```{r}
+setwd("C:/Users/Jespe/OneDrive/Dokumenter/GitHub/Creatine-study/realdeal/ROFD/ROFD x2 ekstra")
+
+temp = list.files(pattern="*.csv")
+myfiles = lapply(temp, read.csv)
+
+ff4 = as.data.frame(NULL)
+
+for (i in seq(myfiles)){
+p = as.data.frame(myfiles[i])
+
+if(i == 17){
+    p[1,3] = "13sch1"
+}
+if(i == 23){
+    p[1,3] = "13sph2"
+}
+
+if(i == 4){
+    p[1,3] = "24scv2"
+}
+
+if(i == 11){
+    p[1,3] = "37scv1"
+}
+
+
+
+if (is.na(nchar((p[1,3]))) == T){
+  participant = substr(p[1,1], start = 34, stop = 35)
+  test = substr(p[1,1], start = 36, stop = 37)
+  testnumber = substr(p[1,1], start = 38, stop = 38)
+  print(i)
+  p = p[-c(1,2),c(1,2)]
+  p$test = test
+  p$participant = participant
+  p$testnumber = testnumber
+  next
+}
+  
+
+
+if (nchar((p[1,3])) > 5){
+participant = substr(p[1,3], start = 1, stop = 2)
+test = substr(p[1,3], start = 4, stop = 5)
+testnumber = substr(p[1,3], start = 6, stop = 6)
+p = p[-c(1,2),c(1,2)]
+p$test = test
+p$participant = participant
+p$testnumber = testnumber
+
+} else {
+participant = substr(p[1,3], start = 1, stop = 1)
+test = substr(p[1,3], start = 3, stop = 4)
+testnumber = substr(p[1,3], start = 5, stop = 5)
+p = p[-c(1,2),c(1,2)]
+p$test = test
+p$participant = participant
+p$testnumber = testnumber
+}
+if (participant == 3){
+  print("cow")
+  print(i)
+}
+
+ff4 = rbind(ff4,p)
+}
+
+
+
+ff4$participant = as.factor(ff4$participant)
+
+ff4$testnumber = as.factor(ff4$testnumber)
+
+length(unique(ff4$participant))
+
+ff4$test = as.factor(ff4$test)
+ff4$date = as.numeric(ff4$date)
+ff4$tag = as.numeric(ff4$tag)
+
+
+```
+
+
+```{r}
+dfpost = rbind(ff3,ff4)
+
+unique(dfpost$participant)[!unique(dfpost$participant) %in% unique(df$participant)]
+
+
+df %>% filter(participant == 67)
+
+```
+
+
+
+
+
+
+
+```{r}
+setwd("C:/Users/Jespe/OneDrive/Dokumenter/GitHub/Creatine-study/realdeal/ROFD/D dag 2")
+
+temp = list.files(pattern="*.csv")
+myfiles = lapply(temp, read.csv)
+
+ff3 = as.data.frame(NULL)
+
+for (i in seq(myfiles)){
+p = as.data.frame(myfiles[i])
+
+if (is.na(nchar((p[1,3]))) == T){
+  participant = substr(p[1,1], start = 34, stop = 35)
+  test = substr(p[1,1], start = 36, stop = 37)
+  testnumber = substr(p[1,1], start = 38, stop = 38)
+  print(i)
+  p = p[-c(1,2),c(1,2)]
+  p$test = test
+  p$participant = participant
+  p$testnumber = testnumber
+  next
+}
+  
+
+
+if (nchar((p[1,3])) > 5){
+participant = substr(p[1,3], start = 1, stop = 2)
+test = substr(p[1,3], start = 4, stop = 5)
+testnumber = substr(p[1,3], start = 6, stop = 6)
+p = p[-c(1,2),c(1,2)]
+p$test = test
+p$participant = participant
+p$testnumber = testnumber
+
+} else {
+participant = substr(p[1,3], start = 1, stop = 1)
+test = substr(p[1,3], start = 3, stop = 4)
+testnumber = substr(p[1,3], start = 5, stop = 5)
+p = p[-c(1,2),c(1,2)]
+p$test = test
+p$participant = participant
+p$testnumber = testnumber
+}
+
+if (participant == 3){
+  print("cow")
+  print(i)
+}
+
+
+
+ff3 = rbind(ff3,p)
+}
+
+
+
+ff3$participant = as.factor(ff3$participant)
+
+ff3$testnumber = as.factor(ff3$testnumber)
+
+length(unique(ff3$participant))
+
+unique(ff3$test)
+ff3$test = as.character(ff3$test)
+
+ff3$test = ifelse(ff3$test == "hc", a<-"ch",ff3$test)
+ff3$test = as.factor(ff3$test)
+ff3$date = as.numeric(ff3$date)
+ff3$tag = as.numeric(ff3$tag)
+
+
+qq = ff3 %>% group_by(participant, testnumber, test) %>% summarize(n=n())
+qq %>% group_by(participant) %>% summarize(n())
+
+
+```
+
+
+
+
+
+
+```{r}
+setwd("C:/Users/Jespe/OneDrive/Dokumenter/GitHub/Creatine-study/realdeal/ROFD/PS")
+
+temp = list.files(pattern="*.csv")
+myfiles = lapply(temp, read.csv)
+
+ff5 = as.data.frame(NULL)
+
+for (i in seq(myfiles)){
+p = as.data.frame(myfiles[i])
+
+
+participant = 100
+test = substr(p[1,3], start = 3, stop = 4)
+testnumber = substr(p[1,3], start = 5, stop = 5)
+p = p[-c(1,2),c(1,2)]
+p$test = test
+p$participant = participant
+p$testnumber = testnumber
+
+
+
+ff5 = rbind(ff5,p)
+}
+
+
+
+ff5$participant = as.factor(ff5$participant)
+
+ff5$testnumber = as.factor(ff5$testnumber)
+
+ff5$test = as.character(ff5$test)
+
+ff5$test = as.factor(ff5$test)
+ff5$date = as.numeric(ff5$date)
+ff5$tag = as.numeric(ff5$tag)
+
+
+
+```
+
+
+```{r}
+dfp = rbind(ff3,ff5)
+```
+
+
+
+
+
+```{r}
+dfpost = rbind(dfpost,dfp)
+
+unique(df$participant)[!unique(df$participant) %in% unique(dfpost$participant)]
+
+
+
+length(unique(dfpost$participant))
+length(unique(df$participant))
+
+df = df %>% filter(as.character(participant) != "64", as.character(participant) != "49")
+
+
+df$tid = 1
+dfpost$tid = 2
+
+df = rbind(df,dfpost)
+
+qq = df %>% group_by(participant,test,testnumber,tid) %>% summarize(max = max(tag))
+
+aa = qq %>% pivot_wider(names_from = test, values_from = max)
+
+aaa = aa %>% pivot_wider(names_from = testnumber, values_from = c(ch,cv,ph,pv))
+
+
+aaa$cv_3 = NULL
+aaa$pv_3 = NULL
+aaa$ph_3 = NULL
+aaa$ch_3 = NULL
+
+
+
+
+
+unique(as.numeric(datax$id))[!unique(as.numeric(datax$id)) %in% unique(as.numeric(as.character(aaa$participant)))]
+#what happend with pikolajs data? id == 100
+aaa$id = aaa$participant
+aaa$participant = NULL
+aaa$tid = as.factor(aaa$tid)
+
+#setwd("C:/Users/Jespe/OneDrive/Dokumenter/GitHub/Creatine-study/realdeal")
+#write.csv(aaa,"ROFD_max.csv")
+
+
+bb = inner_join(aaa,datax, by=c("id","tid"))
+
+hist(bb$ch_1-bb$HC1)
+hist(bb$ch_2-bb$HC2)
+hist(bb$cv_1-bb$VC1)
+hist(bb$cv_2-bb$VC2)
+hist(bb$pv_1-bb$VP2)
+hist(bb$pv_1-bb$VP1)
+hist(bb$pv_2-bb$VP2)
+```
+
+
+
+
+
+```{r}
+
+
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+```{r funktion to loop and make pdf}
+get_plots = function(data,test_h){
+  plot_list = list()
+  df = data
+  q = 0
+  for (i in unique(df$participant)){
+    q = q+1
+    xx = df %>% filter(participant == i)
+    xx = xx %>% filter(as.character(test) == test_h)
+    dataline = xx %>% group_by(testnumber) %>% summarize(unique = unique(vertical))
+    data1=filter(dataline, testnumber == "1")
+    data2=filter(dataline, testnumber == "2")
+    
+    plot = xx %>% ggplot(aes(x = as.numeric(date), y = as.numeric(tag), col = as.factor(tid)))+geom_line()+facet_wrap(facets = vars(testnumber))+geom_vline( xintercept = data1$unique, colour = "purple")+geom_vline(xintercept = data2$unique, colour = "black")+ggtitle(i)
+    plot_list[[q]] = plot
+}
+
+  return(plot_list)
+}
+
+
+plots = get_plots(df,"ch")
+
+setwd("C:/Users/Jespe/OneDrive/Dokumenter/GitHub/Creatine-study/realdeal")
+pdf("RFD_shit.pdf")
+for (i in 1:length(plots)) {
+    print(plots[[i]])
+}
+dev.off()
+
+```
+
+
+
+
+
+
+```{r individual participants}
+
+xx = df %>% filter(as.character(test) == "ch", as.character(participant) == 60)
+
+dataline = xx %>% group_by(testnumber) %>% summarize(unique = unique(vertical))
+data1=filter(dataline, testnumber == "1")
+data2=filter(dataline, testnumber == "2")
+    
+xx %>% ggplot(aes(x = as.numeric(date), y = as.numeric(tag), col = as.factor(tid)))+geom_line()+facet_wrap(facets = vars(testnumber))+geom_vline(xintercept = data1$unique, colour = "purple")+geom_vline(xintercept = data2$unique, colour = "yellow")+xlim(min(data1$unique)-0.2,max(data1$unique)+0.2)
+
+```
+
+
+
+
+
+
+```{r}
+library(lme4)
+
+df$tid = as.factor(df$tid)
+
+
+df = df %>% group_by(participant,test,testnumber,tid) %>% mutate(x = max(tag,na.rm = T))
+
+df$logical = ifelse(df$tag == df$x, a<-TRUE, b<- FALSE)
+
+df = df %>% group_by(participant,test,testnumber,tid) %>% mutate(rækker = 1:n())
+
+df = df %>% group_by(participant,test,testnumber,tid) %>% mutate(aa = min(which(logical == TRUE)))
+
+df$logical = ifelse(df$rækker < df$aa+10, a<-TRUE, b<- FALSE)
+
+p30 = df %>% filter(test == "ch",testnumber == 2,tid == 1, logical == TRUE)
+
+
+p30 %>% filter(logical == TRUE) %>% ggplot(aes(x = date, tag, col = tid))+geom_line()+facet_grid(~participant)
+
+p30$lag = lag(p30$tag,1)
+p30$dif = p30$tag-p30$lag
+
+summary(lmer(dif ~ tag+I(tag^2)+(1|participant),data = p30))
+
+summary(lmer(dif ~ poly(tag,2)+(1|participant),data = p30))
+
+
+m1 = nlmer(tag~SSlogis(date,Asym,xmid,scal)~tid+(Asym|participant), data = p30, start= c(Asym = 400,xmid = 1, scal = 0.3))
+summary(m1)
+
+
+
+m2 = nlme(tag ~ SSlogis(date,Asym,xmid,scal),
+          data = p30,
+          fixed = list(Asym+xmid+scal ~ 1, xmid~tid),
+          random = Asym ~ 1 | tid,
+          start = c(400,1, 0.3))
+
+m3 = summary(m2)
+m3
+
+m3$coefficients
+
+
+
+p3030 = p30 %>% filter(participant == 67)
+
+
+
+m1 = nls(tag~SSlogis(date,Asym,xmid,scal), data = p3030, start= c(Asym = 400,xmid = 1, scal = 0.3))
+
+m2 = summary(m1)
+m2
+
+
+A = m2$coefficients[1]
+xmid = m2$coefficients[2]
+s = m2$coefficients[3]
+
+x = rnorm(1000,0,5)
+y = A/(1+exp(-(x-xmid)/s))
+
+
+data = data.frame(x = x, y = y)
+data %>% ggplot(aes(x,y, col = "blue"))+geom_point()+geom_point(data = p3030, aes(date,tag,col = "red"))
+```
+
+
+```{r}
+df = df %>% group_by(participant,test,testnumber,tid) %>% mutate(x = max(tag,na.rm = T))
+
+df$logical = ifelse(df$tag == df$x, a<-TRUE, b<- FALSE)
+
+df = df %>% group_by(participant,test,testnumber,tid) %>% mutate(rækker = 1:n())
+
+df = df %>% group_by(participant,test,testnumber,tid) %>% mutate(aa = min(which(logical == TRUE)))
+
+df$logical = ifelse(df$rækker < df$aa+5, a<-TRUE, b<- FALSE)
+```
+
+
+```{r}
+get_plots = function(data, tester,testnumberer,tider){
+  data = data %>% filter(test == tester,testnumber == testnumberer,tid == tider, logical == TRUE)
+  plot_list = list()
+  q = 0
+  fer = data.frame(NULL)
+  for (i in unique(data$participant)){
+    q = q+1
+    print(i)
+    xx = data %>% filter(participant == i)
+
+    
+    if (i == 45 & testnumberer == 1 & tider == 1 & tester == "ch"){
+      next
+    }
+    
+    if (i == 52 & testnumberer == 1 & tider == 1 & tester == "pv"){
+      next
+    }
+    
+    if (i == 32 & testnumberer == 1 & tider == 1 & tester == "pv"){
+      next
+    }
+    
+    
+    if (tester == "cv" | tester == "ch"){
+    
+    m1 = nls(tag~SSlogis(date,Asym,xmid,scal), data = xx, start= c(Asym = 400,xmid = 1, scal = 0.07), control = c(maxiter = 1000))
+    }
+    
+    
+    
+    
+    
+    if (tester == "ph" | tester == "pv"){
+      if (testnumberer == 1 & i == 65 & tider == 1 & tester == "pv"){
+      next
+      m1 = nls(tag~SSlogis(date,Asym,xmid,scal), data = lol, start= c(Asym = 80,xmid = 0.7, scal = 0.03))
+      }
+      
+      
+      
+    m1 = nls(tag~SSlogis(date,Asym,xmid,scal), data = xx, start= c(Asym = 100 ,xmid = 1, scal = 0.05))
+    }
+    
+    
+    m2 = summary(m1)
+    
+    A = m2$coefficients[1]
+    xmid = m2$coefficients[2]
+    s = m2$coefficients[3]
+    u_på_s = m2$coefficients[3,2]
+    pop = c(i,A,xmid,s,u_på_s)
+    
+    
+    x = runif(1000,-2,5)
+    y = A/(1+exp(-(x-xmid)/s))
+    
+    data1 = data.frame(x = x, y = y)
+    plot = data1 %>% ggplot(aes(x,y, col = "blue"))+geom_point()+geom_point(data = xx, aes(date,tag,col = "red"))+ggtitle(i)
+    plot_list[[q]] = plot
+    fer = rbind(fer,pop)
+    
+    
+
+    
+}
+
+setwd("C:/Users/Jespe/OneDrive/Dokumenter/GitHub/Creatine-study/realdeal")
+navn = paste0("ROFD","-",tester,"-","testnumber  ",as.character(testnumberer),"-","tid  ",as.character(tider),".pdf")
+pdf(navn)
+qqw  <<- plot_list
+
+
+for (i in 1:length(plot_list)) {
+      print(plot_list[[i]])
+}
+dev.off()
+  names(fer)[1] = "id"
+  names(fer)[2] = "amp"
+  names(fer)[3] = "xmid"
+  names(fer)[4] = "s"
+  names(fer)[5] = "u_på_s"
+  fer$testnumber = testnumberer
+  fer$tid = tider
+  fer$test = tester
+  
+  return(fer)
+}
+
+cv11 = get_plots(df, "cv",1,1)
+cv21 = get_plots(df, "cv",2,1)
+ch11 = get_plots(df, "ch",1,1)
+ch21 = get_plots(df, "ch",2,1)
+
+
+cv12 = get_plots(df, "cv",1,2)
+cv22 = get_plots(df, "cv",2,2)
+ch12 = get_plots(df, "ch",1,2)
+ch22 = get_plots(df, "ch",2,2)
+
+ROFD = rbind(cv11,cv21,ch11,ch21,cv12,cv22,ch12,ch22)
+ROFD$tid = as.factor(ROFD$tid)
+ROFD$s = as.numeric(ROFD$s)
+ROFD$amp = as.numeric(ROFD$amp)
+ROFD$xmid = as.numeric(ROFD$xmid)
+ROFD$u_på_s = as.numeric(ROFD$u_på_s)
+
+
+
+
+
+
+pv11 = get_plots(df, "pv",1,1)
+pv21 = get_plots(df, "pv",2,1)
+ph11 = get_plots(df, "ph",1,1)
+ph21 = get_plots(df, "ph",2,1)
+
+
+
+
+pv12 = get_plots(df, "pv",1,2)
+pv22 = get_plots(df, "pv",2,2)
+ph12 = get_plots(df, "pv",1,2)
+ph22 = get_plots(df, "pv",2,2)
+```
+
+
+```{r}
+df %>% filter(test == "ch",testnumber == 1,tid == 2, logical == TRUE, participant == 9) %>% ggplot(aes(date,tag))+geom_point()
+
+
+lol = df %>% filter(test == "ch",testnumber == 1,tid == 2, logical == TRUE, participant == 9)
+
+m1 = nls(tag~SSlogis(date,Asym,xmid,scal), data = lol, start= c(Asym = 350,xmid = 1, scal = 0.3))
+m55 = summary(m1)
+m55$coefficients
+
+
+?nls()
+```
+
+
+
+
+
+```{r}
+
+
+dataxx = df %>% filter(participant == 43 | participant == 32 | participant == 67 | participant == 30 | participant == 55) %>% filter(test == "ch" & tid == 1, testnumber == 1 & logical == TRUE)
+
+
+m1 = nls(tag~SSlogis(date,Asym,xmid,scal), data = dataxx %>% filter(participant == 43), start= c(Asym = 400,xmid = 1, scal = 0.07), control = c(maxiter = 1000))
+
+
+m2 = summary(m1)
+m2
+
+A = m2$coefficients[1]
+xmid = m2$coefficients[2]
+s = m2$coefficients[3]
+u_på_s = m2$coefficients[3,2]
+pop = c(i,A,xmid,s,u_på_s)
+
+
+x = runif(1000,-2,5)
+y = A/(1+exp(-(x-xmid)/s))
+
+data1 = data.frame(x = x, y = y)
+data1 %>% ggplot(aes(x,y, col = "blue"))+geom_point()+geom_point(data = dataxx %>% filter(participant == 43), aes(date,tag,col = "red"))
+
+
+dataxx = df %>% filter(participant != 45) %>% filter(test == "ch" & tid == 1, testnumber == 1 & logical == TRUE)
+
+
+
+hill_nlme_fit <- nlme::nlme(tag~SSlogis(date,a,b,c), 
+                  data = dataxx,
+                  fixed=a + b + c ~ 1, 
+                  random = a + b + c ~ 1, 
+                  groups = ~ participant, 
+                  start = c(Asym = 400,xmid = 1, scal = 0.07),
+                  verbose = F)
+
+
+ko = coef(hill_nlme_fit)
+
+ko$participant = row.names(ko)
+
+koq = inner_join(dataxx,ko, by = "participant")
+
+koq$traj = koq$a/(1+exp(-(koq$date-koq$b)/koq$c))
+
+
+koq %>% filter(as.numeric(participant)> 50) %>% ggplot(aes(x = date, y = tag, col = "red"))+geom_point()+geom_point(aes(x = date, y = traj, col = "blue"))+facet_wrap(~participant, ncol = 4)
+
+lkl = koq %>% group_by(participant) %>% summarize(amp2 = mean(a), xmid2 = mean(b), s2 = mean(c))
+
+lkl$id = lkl$participant
+
+
+cvc = inner_join(lkl, ch11, by = "id")
+
+
+cvc$amp = as.numeric(cvc$amp)
+cvc$xmid = as.numeric(cvc$xmid)
+cvc$s = as.numeric(cvc$s)
+
+
+
+
+hist(cvc$amp2-cvc$amp)
+hist(cvc$s2-cvc$s)
+hist(cvc$xmid2-cvc$xmid)
+
+
+```
+
+
+
+
+
+
+
+```{r}
+dq = df %>% filter(participant == 24 & test == "ch" & testnumber == 1 & tid == 1 & logical == TRUE)
+
+hill_nls_fit <- nls.multstart::nls_multstart(tag~SSlogis(date,Asym,xmid,scal),
+                             data = dq,
+                             lower=c(a=150, b=0, c=0),
+                             upper=c(a=700, b=1, c=1),
+                             start_lower = c(a=300, b=0.7, c=0.1),
+                             start_upper = c(a=500, b=0.9, c=0.3),
+                             iter = 500,
+                             supp_errors = "Y")
+
+plot_nls <- function(nls_object, data) {
+  data$Time = data$date
+  predframe <- tibble(Time=seq(from=min(data$Time), to=max(data$Time), 
+                               length.out = nrow(data))) %>%
+    mutate(ParentFrac = predict(nls_object, newdata = list(Time=.$Time)))
+  ggplot(data, aes(x=Time, y=tag)) +
+    geom_point(size=3) +
+    geom_line(data = predframe, aes(x=Time, y=ParentFrac))
+}
+
+
+plot_nls(hill_nls_fit, dq)
+
+
+hill_nls_fit_func <- function(pf_df) {
+  nls.multstart::nls_multstart(tag~SSlogis(date,Asym,xmid,scal),
+                             data = dq,
+                             lower=c(a=150, b=0, c=0),
+                             upper=c(a=700, b=1, c=1),
+                             start_lower = c(a=300, b=0.7, c=0.1),
+                             start_upper = c(a=500, b=0.9, c=0.3),
+                             iter = 500,
+                             supp_errors = "Y")
+} 
+
+pfdata <- df %>% 
+  mutate(hill_nls_fit = map(pf, ~hill_nls_fit_func(.x)))
+
+
+?map()
+```
+
+

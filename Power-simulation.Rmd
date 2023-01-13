@@ -18,18 +18,8 @@ library(car)
 
 
 
-
-
-
-
-
-
-
-
-
 ```{r}
 
-```{r}
 #the real deal
 simulations = 1000
 pmk = rep(1,simulations)
@@ -82,7 +72,7 @@ ll$treatment = as.factor(ll$treatment)
 ll$time = as.factor(ll$time)
 ll$id = as.factor(ll$id)
 
-
+#body weight
 c0 = rnorm(n, 65, 7.5)
 c1 = rnorm(n, c0, 0.5)
 t0 = rnorm(n, 65, 7.5)        
@@ -92,7 +82,7 @@ u = c(c0,c1,t0,t1)
 
 ll$bw = u
 
-
+#hang time
 c0 = rnorm(n, 20, 5)
 c1 = rnorm(n, c0, 1.2)
 t0 = rnorm(n, 20, 5)        
@@ -104,6 +94,7 @@ u = c(c0,c1,t0,t1)
 ll$h = u
 #ll$he = ll$he*ll$bw
 
+#pull ups
 c0 = rnorm(n, 10, 4)
 c1 = rnorm(n, c0, 1)
 t0 = rnorm(n, 10, 4)        
@@ -113,7 +104,7 @@ u = c(c0,c1,t0,t1)
 ll$p = u
 #ll$pe = ll$pe*ll$bw
 
-
+#max vol. right
 c0 = rnorm(n, 400, 150)
 c1 = rnorm(n, c0, 25)
 t0 = rnorm(n, 400, 150)        
@@ -124,7 +115,7 @@ u = c(c0,c1,t0,t1)
 ll$hmr = u
 
 
-
+#max vol. left
 c0 = rnorm(n, 400, 150)
 c1 = rnorm(n, c0, 25)
 t0 = rnorm(n, 400, 150)        
@@ -134,6 +125,7 @@ u = c(c0,c1,t0,t1)
 
 ll$hml = u
 
+#pinch right max
 c0 = rnorm(n, 15, 4)
 c1 = rnorm(n, c0, 1)
 t0 = rnorm(n, 15, 4)        
@@ -143,7 +135,7 @@ u = c(c0,c1,t0,t1)
 
 ll$pir = u
 
-
+#pinch left max
 c0 = rnorm(n, 15, 4)
 c1 = rnorm(n, c0, 1)
 t0 = rnorm(n, 15, 4)        
@@ -153,6 +145,8 @@ u = c(c0,c1,t0,t1)
 
 ll$pil = u
 
+
+#lock off left
 c0 = rnorm(n, 15, 4)
 c1 = rnorm(n, c0, 1)
 t0 = rnorm(n, 15, 4)        
@@ -162,6 +156,8 @@ u = c(c0,c1,t0,t1)
 
 ll$ll = u
 
+
+#lock off right
 c0 = rnorm(n, 15, 4)
 c1 = rnorm(n, c0, 1)
 t0 = rnorm(n, 15, 4)        
@@ -170,6 +166,7 @@ t1 = rnorm(n, t0+rnorm(n, 1, 0.3), 1)
 u = c(c0,c1,t0,t1)
 
 ll$lr = u
+
 
 ll$pbw = ll$p/ll$bw
 ll$llbw = ll$ll/ll$bw
@@ -481,8 +478,6 @@ plotll
 plotlr
 plotpir
 plotpil
-
-```
 
 ```
 
