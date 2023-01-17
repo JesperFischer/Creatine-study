@@ -7,12 +7,10 @@ editor_options:
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-library(rethinking)
 library(tidyverse)
 library(sjmisc)
 library(lmerTest)
 library(ggpubr)
-library(simr)
 library(MuMIn)
 library(car)
 ```
@@ -30,6 +28,8 @@ ggline(q,
        palette = "jco")
 
 ```
+
+
 ```{r}
 #function makes 1000 simulations of these effect of the creatine group:
 #bw incease = 1.5 sd = 1

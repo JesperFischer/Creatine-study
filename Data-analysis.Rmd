@@ -1,0 +1,73 @@
+---
+title: "Thermal Pain Learning"
+author: "Jesper Fischer Ehmsen"
+date: "`r Sys.Date()`"
+output:
+  html_document: default
+  word_document: default
+link-citations: yes
+linkcolor: blue
+csl: nature.csl
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+```{r, include=FALSE, eval = T}
+
+source("scripts.R")
+data = get_data()
+
+fit = MANOVA.wide(cbind(crimphøjremax,crimpvenstremax, pinchhøjremax, pinchvenstremax,pullups_r,lattice_r,ll_r,lr_r) ~ tid * gruppe, data = data, iter = 1000)
+fit <- multRM(cbind(crimphøjremax,crimpvenstremax, pinchhøjremax, pinchvenstremax,pullups_r,lattice_r,ll_r,lr_r) ~ tid * gruppe, data = data1, subject = "id", within = "tid", iter = 1000)
+
+summary(fit)
+
+
+m1 = manova(cbind(crimphøjremax,crimpvenstremax, pinchhøjremax, pinchvenstremax,pullups_r,lattice_r,ll_r,lr_r) ~ 
+              tid*gruppe+Error(id),
+              data = data)
+
+
+summary(m1, test = "Pillai")
+
+#check for univariate normality.
+library(rstatix)
+data %>% group_by(tid,gruppe) %>%  shapiro_test(crimphøjremax,crimpvenstremax, pinchhøjremax, pinchvenstremax,pullups_r,lattice_r,ll_r,lr_r)
+
+#multivariate normality using Mardia’s Skewness and Kurtosis test,
+library(mvnormalTest)
+mardia(data[, c("crimphøjremax", "crimpvenstremax","pinchhøjremax","pinchvenstremax","pullups_r","lattice_r","ll_r","lr_r")])$mv.test
+
+##
+library(heplots)
+boxM(Y = data[, c("crimphøjremax", "crimpvenstremax","pinchhøjremax","pinchvenstremax","pullups_r","lattice_r","ll_r","lr_r")], group = data$tid)
+boxM(Y = data[, c("crimphøjremax", "crimpvenstremax","pinchhøjremax","pinchvenstremax","pullups_r","lattice_r","ll_r","lr_r")], group = data$gruppe)
+
+
+library(rstatix)
+# get distance
+mahalanobis_distance(data = data[, c("crimphøjremax", "crimpvenstremax","pinchhøjremax","pinchvenstremax","pullups_r","lattice_r","ll_r","lr_r")])$is.outlier
+
+cor.test(x = data$pinchhøjremax, y = data$crimphøjremax, method = "pearson")$estimate
+cor.test(x = data$ll_r, y = data$lr_r, method = "pearson")$estimate
+cor.test(x = data$lattice_r, y = data$pullups_r, method = "pearson")$estimate
+
+```
+
+```{r}
+#plots
+library(ggpol)
+
+newdata <- data[order(data$crimphøjremax),]
+
+data %>% ggplot(aes(x = tid, y = ll_r))+ geom_boxplot(aes(col = gruppe), outlier.color = NA)+geom_line(aes(group = id, col = gruppe),position=position_dodge(0.1), size = 1.1)+
+  geom_point(aes(col = gruppe, group = id), position = position_dodge(0.1), size = 2)+
+scale_color_manual(labels=c("no-good-stuff","the good stuff"), values = c("#a9a9a9","#000000"))+
+  facet_wrap(~kod, labeller = as_labeller(c("0" = "Ingen kød","1" = "Kød!")))
+
+```
+
