@@ -1,5 +1,5 @@
 ---
-title: "Thermal Pain Learning"
+title: "Pre-registered randomized double blinded creatine study on recreational climbers"
 author: "Jesper Fischer Ehmsen"
 date: "`r Sys.Date()`"
 output:
@@ -14,7 +14,32 @@ csl: nature.csl
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## R Markdown
+
+Abstract
+===============================================================================
+
+
+
+
+
+
+
+
+
+
+
+
+
+Methods
+===============================================================================
+
+
+
+
+Results
+===============================================================================
+
+
 
 ```{r, include=FALSE, eval = T}
 #source("scripts.R")
@@ -29,7 +54,7 @@ m1 = manova(cbind(crimphøjremax,crimpvenstremax, pinchhøjremax, pinchvenstrema
               data = data)
 
 
-summary(m1)
+results = summary(m1)
 
 #check for univariate normality.
 library(rstatix)
@@ -56,7 +81,10 @@ cor.test(x = data$lattice_r, y = data$pullups_r, method = "pearson")$estimate
 
 ```
 
-```{r}
+From our analysis we found a non-significant group by time interaction effect Pillai = `r round(results$"Error: Within"$stats[2,2],2)`, F = `r round(results$"Error: Within"$stats[2,3],2)` p = `r round(results$"Error: Within"$stats[2,6],2)` 
+
+
+```{r, fig.width = 6, fig.height = 5, warning = F, message = F, echo = F, fig.cap = "This is the figure caption to make the space fit"}
 #plots
 library(ggpol)
 
@@ -69,14 +97,17 @@ data %>% ggplot(aes(x = tid, y = ll_r))+
   geom_boxplot(aes(col = gruppe), outlier.color = NA,width = 0.3)+
   geom_line(data = data1, aes(x = tid2, y = ll_r,group = id, col = gruppe),position=position_dodge(0.1), size = 1.1)+
   geom_point(data = data1, aes(x = tid2, y = ll_r, col = gruppe, group = id), position = position_dodge(0.1), size = 2)+
-scale_color_manual(labels=c("no-good-stuff","the good stuff"), values = c("#a9a9a9","#000000"))+scale_x_discrete(" ", breaks = c(1,2), labels = c("pre","post"))#+facet_wrap(~kod, labeller = as_labeller(c("0" = "Ingen kød","1" = "Kød!")))
-
-data %>% ggplot(aes(x = tid, y = pullups_r))+ 
-  geom_boxplot(aes(col = gruppe), outlier.color = NA,width = 0.3)+
-  geom_line(data = data1, aes(x = tid2, y = pullups_r,group = id, col = gruppe),position=position_dodge(0.1), size = 1.1)+
-  geom_point(data = data1, aes(x = tid2, y = pullups_r, col = gruppe, group = id), position = position_dodge(0.1), size = 2)+
-scale_color_manual(labels=c("no-good-stuff","the good stuff"), values = c("#a9a9a9","#000000"))+scale_x_discrete(" ", breaks = c(1,2), labels = c("pre","post"))#+facet_wrap(~kod, labeller = as_labeller(c("0" = "Ingen kød","1" = "Kød!")))
-
-
+scale_color_manual(labels=c("no-good-stuff","the good stuff"), values = c("#a9a9a9","#000000"))+scale_x_discrete(" ", breaks = c(1,2), labels = c("pre","post"))+ggtitle("group by time of the good stuff in lock-off on left arm")+ylab("Time (s)")+ theme(plot.title = element_text(hjust = 0.5))#+facet_wrap(~kod, labeller = as_labeller(c("0" = "Ingen kød","1" = "Kød!")))
 ```
+
+
+
+
+
+
+
+
+Discussion
+===============================================================================
+
 
