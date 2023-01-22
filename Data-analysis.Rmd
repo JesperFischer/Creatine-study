@@ -5,13 +5,21 @@ date: "`r Sys.Date()`"
 output:
   html_document: default
   word_document: default
+  pdf_document:
+    keep_tex: yes
+  header-includes:
+    \usepackage{table}
+    \usepackage{tabular}   
+  
 link-citations: yes
 linkcolor: blue
 csl: nature.csl
 ---
 
-```{r setup, include=FALSE}
+```{r setup, include=FALSE, eval=TRUE}
+library(tables)
 knitr::opts_chunk$set(echo = TRUE)
+table_options(knit_print = TRUE)
 ```
 
 
@@ -23,21 +31,43 @@ Abstract
 
 
 
-
-
-
-
-
-
-
 Methods
 ===============================================================================
 
 
+```{r, include=FALSE, eval = T}
+source("scripts.R")
+data = get_data()
+```
+
+This project was pre-registered in [osf](https://osf.io/3vf6x) and the methods and statistical analyses are therefore in accordance to the pre-registration unless stated as an exploratory analysis.
+
+#### **Participants**
+After given written consent `r length(unique(data$id))` recreational climbers (f = `r data %>% filter(k_n2 == 2) %>% summarize(n = n()/2)`) with `r round(mean(data$klatre_r2,na.rm = T),1)` $\pm$ `r round(sd(data$klatre_r2,na.rm = T),1)` (mean $\pm$ sd) years of climbing experience completed a battery of climbing specific exercises and agreed to turn up the following week the same time of day. Participants were given either pure maltodextrin or a combination of creatine and maltodextrin and were instructed to ingest 7.5grams 4 times a day, as evenly distributed as possible. The creatine arm of the experiment also ingested maltodextrin due to strengthening of the blinding as maltodextrin tastes sweet and creatine monohydrate is flavourless. Exclusion citeria of the current study included (a) not ingesting the powder (b) useage of creatine in the last 6 months (c) training in the last 48 hours up to testing (d) ingestion of alcohol, caffeine or other performance modulating substances in the last 6 hours. Participants in the study (between `r range(data$alder2, na.rm = T)[1]` and `r range(data$alder2, na.rm = T)[2]`) were pseudo-randomly divided into two groups such that each group had similar characteristics (age,physical performance, years of climbing experience, blabllblablalballba), this pseudo randomization was conducted by a third party such that the study was double blinded. The study was conducted in accordance with the Declaration of Helsinki and was approved by the ethics committee of the responsible department.
+
+#### **Testing procedure**
+
+Climbers firstly did a 5 minute standardized warm-up, hereafter they went through a battery of 8 strength measuring tests and finally 5 minute testing on a standardized climbing circuit board (moon-board). The battery of strength tests was performed in the following order for all participants. First maximal isometric voluntary contraction (MIVC) of the finger flexors in a crimped position was assessed. After 30 seconds rest maximal number of pull ups were performed, which were defined as chin over the bar and minimal momentum. After a minutes rest the climbers were to hang as long as possible on a 20mm edge in a half crimp position. Next MIVC was measured in a pinch position for both left and right hand. After another minute of rest participants performed the last strength exercise, a 90$^{\circ}$ biceps lock off with a dumbbell. The weight of the dumbbell was determined by the number of pull ups performed on the first testing day (i.e prior to creatine or placebo ingestion), > 10 pull ups was accompanied by a dumbbell weight of 17kg (if this was still to much to be held for less than 5 seconds, 13 kg was used) > 15 pull ups with 21kg and < 15 pull ups with 25kg. After another minutes of rest participants were instructed in climbing on the moon board where five pre-selected climbing rutes were chosen of gradual increase in difficulty, the climbers then had 5 minutes to complete as many of the five climbing rutes or get as far as possible on the first rute.
+The testing protocol was performed twice, one in the inital visit and one after a week of creatine or placebo. Due to reported time of day fluctuations of strength, the climbers all completed the second visit within 2 hours of the time the week prior (REF).
+To ensure no errors occurred doing counting or timing of participants as well as ensure the same quality of reps on the pre and post sessions as participants were filmed and the videos were afterwards double checked to match with the recorded reps and time. Temperature and humidity was also monitored, when the participants started their session. 
+
+
+### **Statistical analysis**
+All statistical analysis was performed in the statistical programming language R (REF). The analysis of choice to maximize statistical power and minimize the number of statistical tests was a repeated measures MANOVA with all 8 strength tests included as dependent variables. Assumption of univariate normality was assessed using shapiro-Wilks test, assumption of multivariate normality was tested with Mardias test and lastly the assumption of homogeneity of variances and covariances was tested using box's M test (see appendix). 
+
+
+
+The sample size of the current study was calculated using the latest meta analysis on the effects of creatine on upper body strength (REF), which indicated that a sample size of 32 was needed to achieve 80% power and $\alpha$ = 0.05.
 
 
 Results
 ===============================================================================
+
+
+```{r}
+#a = data %>% select(crimphøjremax,crimpvenstremax, pinchhøjremax, pinchvenstremax,pullups_r,lattice_r,ll_r,lr_r)
+#corrplot(cor(a,use = "complete.obs"), method = "pie")
+```
 
 
 
@@ -45,16 +75,97 @@ Results
 #source("scripts.R")
 #data = get_data1()
 
-source("scripts.R")
-data = get_data()
-
 
 m1 = manova(cbind(crimphøjremax,crimpvenstremax, pinchhøjremax, pinchvenstremax,pullups_r,lattice_r,ll_r,lr_r) ~ 
-              tid*gruppe+Error(id),
+              tid*gruppe+humidity+Error(id),
               data = data)
 
 
 results = summary(m1)
+```
+
+The main MANOVA analysis showed a main effect of time Pillai = `r round(results$"Error: Within"$stats[1,2],2)`, F = `r round(results$"Error: Within"$stats[1,3],2)` p = `r round(results$"Error: Within"$stats[1,6],2)` however no significant group by time interaction was found Pillai = `r round(results$"Error: Within"$stats[2,2],2)`, F = `r round(results$"Error: Within"$stats[2,3],2)` p = `r round(results$"Error: Within"$stats[2,6],2)`.
+
+
+
+```{r}
+#table:
+library(gt)
+
+
+table = data %>% group_by(tid,gruppe) %>% summarize(chm = mean(crimphøjremax), chm_sd = sd(crimphøjremax), vcm = mean(crimpvenstremax, na.rm =T), vcm_sd = sd(crimpvenstremax, na.rm =T))
+
+```
+
+
+
+
+
+```{r}
+
+tab <- tabular( (Species + 1) ~ (n=1) + Format(digits=2)*
+         (Sepal.Length + Sepal.Width)*(mean + sd), data=iris )
+
+toLatex(tab)
+
+```
+
+
+
+
+```{r, fig.width = 6, fig.height = 5, warning = F, message = F, echo = F, fig.cap = "This is the figure caption to make the space fit"}
+#plots
+library(ggpol)
+
+newdata <- data[order(data$crimphøjremax),]
+data$tid = as.factor(data$tid)
+
+data1 = data %>% mutate(tid = as.numeric(as.character(tid))) %>% mutate(tid2 = ifelse(data$tid == 1, a<-1.25, b<-1.75))
+
+data %>% ggplot(aes(x = tid, y = ll_r))+ 
+  geom_boxplot(aes(col = gruppe), outlier.color = NA,width = 0.3)+
+  geom_line(data = data1, aes(x = tid2, y = ll_r,group = id, col = gruppe),position=position_dodge(0.1), size = 1.1)+
+  geom_point(data = data1, aes(x = tid2, y = ll_r, col = gruppe, group = id), position = position_dodge(0.1), size = 2)+
+scale_color_manual(labels=c("no-good-stuff","the good stuff"), values = c("#a9a9a9","#000000"))+scale_x_discrete(" ", breaks = c(1,2), labels = c("pre","post"))+ggtitle("group by time of the good stuff in lock-off on left arm")+ylab("Time (s)")+ theme(plot.title = element_text(hjust = 0.5))#+facet_wrap(~kod, labeller = as_labeller(c("0" = "Ingen kød","1" = "Kød!")))
+
+
+```
+
+
+
+```{r, fig.width = 6, fig.height = 5, warning = F, message = F, echo = F, fig.cap = "This is the figure caption to make the space fit"}
+#a = data[,c(15,17,18,19,20,21,22,23,25,26,27,28,29,30,31,39,44)]
+#corrplot(cor(a,use = "complete.obs"), method = "pie")
+
+#partial correlations:
+#correlation = pcor(a %>% drop_na())
+#corrplot(correlation$estimate, method = "pie",p.mat = correlation$p.value, sig.level = 0.05)
+```
+
+
+```{r, fig.width = 6, fig.height = 5, warning = F, message = F, echo = F, fig.cap = "This is the figure caption to make the space fit"}
+#correlation between time in lattice and self-reported sports grade:
+
+  data %>% group_by(id) %>% summarize(lattice = mean(lattice_r), sportsgrade = mean(sport_grad)) %>%  ggplot(aes(y = sportsgrade, x = lattice))+geom_point()+geom_smooth(method = "lm")+theme_classic()+ylab("self reported sports grade")+xlab("Time hung in lattice (s)")
+
+```
+
+
+
+
+
+Discussion
+===============================================================================
+
+
+
+
+
+
+
+Appendix
+================================
+```{r}
 
 #check for univariate normality.
 library(rstatix)
@@ -78,36 +189,5 @@ mahalanobis_distance(data = data[, c("crimphøjremax", "crimpvenstremax","pinchh
 cor.test(x = data$pinchhøjremax, y = data$crimphøjremax, method = "pearson")$estimate
 cor.test(x = data$ll_r, y = data$lr_r, method = "pearson")$estimate
 cor.test(x = data$lattice_r, y = data$pullups_r, method = "pearson")$estimate
-
 ```
-
-From our analysis we found a non-significant group by time interaction effect Pillai = `r round(results$"Error: Within"$stats[2,2],2)`, F = `r round(results$"Error: Within"$stats[2,3],2)` p = `r round(results$"Error: Within"$stats[2,6],2)` 
-
-
-```{r, fig.width = 6, fig.height = 5, warning = F, message = F, echo = F, fig.cap = "This is the figure caption to make the space fit"}
-#plots
-library(ggpol)
-
-newdata <- data[order(data$crimphøjremax),]
-data$tid = as.factor(data$tid)
-
-data1 = data %>% mutate(tid = as.numeric(as.character(tid))) %>% mutate(tid2 = ifelse(data$tid == 1, a<-1.25, b<-1.75))
-
-data %>% ggplot(aes(x = tid, y = ll_r))+ 
-  geom_boxplot(aes(col = gruppe), outlier.color = NA,width = 0.3)+
-  geom_line(data = data1, aes(x = tid2, y = ll_r,group = id, col = gruppe),position=position_dodge(0.1), size = 1.1)+
-  geom_point(data = data1, aes(x = tid2, y = ll_r, col = gruppe, group = id), position = position_dodge(0.1), size = 2)+
-scale_color_manual(labels=c("no-good-stuff","the good stuff"), values = c("#a9a9a9","#000000"))+scale_x_discrete(" ", breaks = c(1,2), labels = c("pre","post"))+ggtitle("group by time of the good stuff in lock-off on left arm")+ylab("Time (s)")+ theme(plot.title = element_text(hjust = 0.5))#+facet_wrap(~kod, labeller = as_labeller(c("0" = "Ingen kød","1" = "Kød!")))
-```
-
-
-
-
-
-
-
-
-Discussion
-===============================================================================
-
 
