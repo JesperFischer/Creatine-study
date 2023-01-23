@@ -17,9 +17,11 @@ csl: nature.csl
 ---
 
 ```{r setup, include=FALSE, eval=TRUE}
-library(tables)
+library(kableExtra)
+library(tidyverse)
+
+
 knitr::opts_chunk$set(echo = TRUE)
-table_options(knit_print = TRUE)
 ```
 
 
@@ -89,26 +91,20 @@ The main MANOVA analysis showed a main effect of time Pillai = `r round(results$
 
 
 ```{r}
-#table:
-library(gt)
-
-
-table = data %>% group_by(tid,gruppe) %>% summarize(chm = mean(crimphøjremax), chm_sd = sd(crimphøjremax), vcm = mean(crimpvenstremax, na.rm =T), vcm_sd = sd(crimpvenstremax, na.rm =T))
-
+library(janitor)
 ```
-
-
-
 
 
 ```{r}
+table = get_summary(data)
 
-tab <- tabular( (Species + 1) ~ (n=1) + Format(digits=2)*
-         (Sepal.Length + Sepal.Width)*(mean + sd), data=iris )
-
-toLatex(tab)
-
+kbl(table) %>%
+  kable_classic() %>% 
+  add_header_above(c(" " = 1, "Placebo" = 2, "Creatine" = 2))
 ```
+
+
+
 
 
 
