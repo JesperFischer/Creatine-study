@@ -1,10 +1,10 @@
 ##scripts to analysis:
 
-pacman::p_load(tidyverse,MANOVA.RM)
+pacman::p_load(tidyverse,MANOVA.RM, janitor)
 
 get_data = function(){
   
-  data = read.csv("final_data.csv")
+  data = read.csv("final_data1.csv")
   data$tid = as.factor(data$tid)
   data$gruppe = as.factor(data$gruppe)
   data$id = as.factor(data$id)
@@ -15,7 +15,7 @@ get_data = function(){
 
 get_data1 = function(){
   #function to get data from raw-files
-  setwd("C:/Users/au645332/Documents/Creatine-study/realdeal")
+  setwd("C:/Users/au645332/Documents/creatine-raw/realdeal")
   videoer = readxl::read_xlsx("Videotider.xlsx")
   dag1 = readxl::read_xlsx("data forsøgs dag 1real.xlsx")
   dag2 = readxl::read_xlsx("Data forsøgsdag 2real.xlsx")
@@ -50,7 +50,7 @@ get_data1 = function(){
   datax$VP1 = as.numeric(datax$VP1)
   datax$VP2 = as.numeric(datax$VP2)
   
-  setwd("C:/Users/au645332/Documents/Creatine-study/realdeal")
+  setwd("C:/Users/au645332/Documents/creatine-raw/realdeal")
   aaa = read.csv("ROFD_max.csv")
   aaa$X = NULL
   aaa$id = as.factor(aaa$id)
@@ -105,7 +105,7 @@ get_data1 = function(){
   datax = datax %>% 
     mutate(pullups_r = coalesce(pullups_r,`pull ups`),lattice_r = coalesce(lattice_r,lattice),ll_r = coalesce(ll_r,LL),lr_r = coalesce(lr_r,LR))
   
-  cols = c(1:11,13,14,29,31,32,33,41,42,43,44,45,46,47,48,52,54,56)
+  cols = c(1:11,13,14,29,31,32,33,35,41,42,43,44,45,46,47,48,52,54,56)
   
   data = datax[,cols]
   
@@ -134,8 +134,6 @@ get_data1 = function(){
   return(data)
   
 }
-
-
 
 
 get_summary = function(data){
@@ -228,5 +226,82 @@ get_summary = function(data){
   table = table %>%
     row_to_names(row_number = 1)
     
+  return(table)
+}
+
+
+get_summary_general = function(data){
+  table = data %>% 
+    filter(gruppe == 1) %>% 
+    summarize(n = n(),
+              age = round(mean(alder2,na.rm =T),0), 
+              age_sd = round(sd(alder2,na.rm =T),1),
+              experience = round(mean(klatre_r2,na.rm =T),0),
+              experience_sd = round(sd(klatre_r2,na.rm =T),1),
+              self_rep_pull = round(mean(self_report_pullup,na.rm =T),0),
+              self_rep_pull_sd = round(sd(self_report_pullup,na.rm =T),1),
+              sport_grad1 = round(mean(sport_grad,na.rm =T),0),
+              sport_grad_sd = round(sd(sport_grad,na.rm =T),1),
+              boulder_grad = round(mean(bouldering_grad,na.rm =T),0),
+              boulder_grad_sd = round(sd(bouldering_grad,na.rm =T),1),
+              height = round(mean(højde,na.rm =T),0),
+              height_sd = round(sd(højde,na.rm =T),1),
+              ape_index = round(mean(span-højde,na.rm =T),0),
+              ape_index_sd = round(sd(span-højde,na.rm =T),1)
+              
+              
+    )
+  
+  
+  ncol = ncol(table)
+  for (i in 1:as.integer((ncol-1)/2)){
+    for (ii in 1:nrow(table)){
+      table[ii,ncol+i] = paste(table[ii,i*2],"\u00B1",table[ii,i*2+1])
+    }}
+  names = names(table)
+  realnames = names[seq(2,ncol, by = 2)]
+  names(table)[(ncol+1):ncol(table)] = realnames
+  table = table[,c(1,(ncol+1):ncol(table))]
+  
+  
+  
+  table2 = data %>% 
+    filter(gruppe == 2) %>% 
+    summarize(n = n(),
+              age = round(mean(alder2,na.rm =T),0), 
+              age_sd = round(sd(alder2,na.rm =T),1),
+              experience = round(mean(klatre_r2,na.rm =T),0),
+              experience_sd = round(sd(klatre_r2,na.rm =T),1),
+              self_rep_pull = round(mean(self_report_pullup,na.rm =T),0),
+              self_rep_pull_sd = round(sd(self_report_pullup,na.rm =T),1),
+              sport_grad1 = round(mean(sport_grad,na.rm =T),0),
+              sport_grad_sd = round(sd(sport_grad,na.rm =T),1),
+              boulder_grad = round(mean(bouldering_grad,na.rm =T),0),
+              boulder_grad_sd = round(sd(bouldering_grad,na.rm =T),1),
+              height = round(mean(højde,na.rm =T),0),
+              height_sd = round(sd(højde,na.rm =T),1),
+              ape_index = round(mean(span-højde,na.rm =T),0),
+              ape_index_sd = round(sd(span-højde,na.rm =T),1))
+  
+  
+  ncol = ncol(table2)
+  for (i in 1:as.integer((ncol-1)/2)){
+    for (ii in 1:nrow(table2)){
+      table2[ii,ncol+i] = paste(table2[ii,i*2],"\u00B1",table2[ii,i*2+1])
+    }}
+  names = names(table2)
+  realnames = names[seq(2,ncol, by = 2)]
+  names(table2)[(ncol+1):ncol(table2)] = realnames
+  table2 = table2[,c(1,(ncol+1):ncol(table2))]
+  
+  table = rbind(table,table2)
+  
+  table$n = NULL
+  
+  table = as.data.frame(t(table))
+  
+  names(table) <- c("placebo","Creatine")
+  
+  
   return(table)
 }
