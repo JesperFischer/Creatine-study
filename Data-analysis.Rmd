@@ -18,9 +18,17 @@ csl: nature.csl
 
 ```{r setup, include=FALSE, eval=TRUE}
 library(kableExtra)
-library(ppcor)
+#library(ppcor)
 library(tidyverse)
-library(janitor)
+#library(janitor)
+library(ggplot2)
+library(gridExtra)
+library(dplyr)
+library(tidyr)
+library(gghalves)
+library(patchwork)
+library(cowplot)
+
 #knitr::opts_chunk$set(echo = TRUE)
 
 ```
@@ -171,16 +179,27 @@ results
 #plots
 library(ggpol)
 
-newdata <- data[order(data$crimphøjremax),]
-data$tid = as.factor(data$tid)
+df %>% mutate(gruppe = as.factor(gruppe), tid = as.factor(tid)) %>% 
+  ggplot(aes())+
+  geom_half_violin(aes(x = gruppe, y = ll_r, fill = tid), side = ifelse(df$tid == 1, "l","r"), adjust = 1.3,trim = FALSE)+
+  geom_boxplot(aes(x = gruppe, y = ll_r, col = tid), width = 0.1, alpha = 0.8, position = position_dodge(width = 0.6))+
+  geom_point(aes(x = ifelse(tid == 1, as.numeric(as.character(gruppe))-0.1, as.numeric(as.character(gruppe))+0.1), y = ll_r,fill = tid),pch=21,size = 3, show.legend = FALSE)+
+  geom_line(aes(x = ifelse(tid == 1, as.numeric(as.character(gruppe))-0.1, as.numeric(as.character(gruppe))+0.1), y = ll_r,group = id), col = "black", alpha = 0.3)+
+  scale_color_manual(values = c("black","black"))+
+  labs(title = "Effect of creatine on time to exhaustion in a lock off",
+       x = "Group",
+       y = "Lock-off right hand (s)",
+       fill = "Time") + 
+  guides(color = "none")+
+  scale_x_discrete(breaks = c(1,2), labels = c("Control", "Creatine"))+
+  theme_classic() +
+  theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5),
+        axis.title = element_text(size = 14),
+        axis.text = element_text(size = 12),
+        legend.title = element_text(size = 14),
+        legend.text = element_text(size = 12),
+        legend.position = "top")
 
-data1 = data %>% mutate(tid = as.numeric(as.character(tid))) %>% mutate(tid2 = ifelse(data$tid == 1, a<-1.25, b<-1.75))
-
-data %>% ggplot(aes(x = tid, y = ll_r))+ 
-  geom_boxplot(aes(col = gruppe), outlier.color = NA,width = 0.3)+
-  geom_line(data = data1, aes(x = tid2, y = ll_r,group = id, col = gruppe),position=position_dodge(0.1), size = 1.1)+
-  geom_point(data = data1, aes(x = tid2, y = ll_r, col = gruppe, group = id), position = position_dodge(0.1), size = 2)+
-scale_color_manual(labels=c("no-good-stuff","the good stuff"), values = c("#a9a9a9","#000000"))+scale_x_discrete(" ", breaks = c(1,2), labels = c("pre","post"))+ggtitle("group by time of the good stuff in lock-off on left arm")+ylab("Time (s)")+ theme(plot.title = element_text(hjust = 0.5))#+facet_wrap(~kod, labeller = as_labeller(c("0" = "Ingen kød","1" = "Kød!")))
 
 
 ```

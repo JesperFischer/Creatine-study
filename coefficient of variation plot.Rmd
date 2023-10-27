@@ -1,0 +1,41 @@
+---
+title: "for other"
+author: "jesper fischer ehmsen"
+date: "2023-03-18"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+```{r}
+library(kableExtra)
+library(ppcor)
+library(tidyverse)
+library(janitor)
+
+df = read.csv("full_rfd_data.csv")
+```
+
+```{r}
+df %>% select(tid,gruppe,crimphøjremax,crimpvenstremax, pinchhøjremax, pinchvenstremax,pullups_r,lattice_r,ll_r,lr_r, RFD_cv,RFD_ch) %>%
+  rename(time = tid,group = gruppe,R_Crimp = crimphøjremax,L_Crimp = crimpvenstremax,R_Pinch = pinchhøjremax,L_Pinch = pinchvenstremax,Pullups = pullups_r,Lattice = lattice_r,L_Lockoff = ll_r,R_lockoff = lr_r,RFD_crimp_l =  RFD_cv,RFD_crimp_r = RFD_ch)%>% 
+  pivot_longer(cols = -c(time, group)) %>% 
+  group_by(time,group,name) %>%
+  summarize(cv = sd(value)/mean(value)) %>%
+  mutate(time = as.factor(time),group = as.factor(group), group = fct_recode(group, "Placebo" = "1", "Creatine" = "2")) %>% 
+  ggplot(aes(x = name, y = cv, col = time))+
+  geom_hline(data = data.frame(y = rep(c(seq(0,1,by = 0.2)),2), group = c(rep(factor("Placebo"),6),rep(factor("Creatine"),6))) ,aes(yintercept = y), color = "gray")+
+  scale_y_continuous(breaks = seq(0,1,by = 0.2))+
+  geom_point(size = 3)+
+  facet_wrap(~group)+
+  theme_classic()+
+  theme(axis.text = element_text(size = 16),axis.text.x = element_text(angle = 45, hjust = 1), axis.title = element_text(size = 20))+ xlab(" ")+ ylab("Coefficient of variation")
+
+
+
+```
+
