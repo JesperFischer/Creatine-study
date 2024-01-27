@@ -1,0 +1,365 @@
+---
+title: "not included analyses"
+author: "jesper fischer ehmsen"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+
+```{r, include=FALSE, eval = T}
+# with bodyweight
+m1 = manova(cbind(hcbw,vcbw, hpbw, vpbw,pullups_r,lattice_r,llbw, lrbw) ~ tid*gruppe+Error(id),
+              data = data)
+
+
+summary(m1)
+```
+
+
+
+
+```{r, fig.width = 6, fig.height = 5, warning = F, message = F, echo = F, fig.cap = "This is the figure caption to make the space fit"}
+#plots
+library(ggpol)
+df = read.csv("full_rfd_data.csv")
+
+df %>% mutate(gruppe = as.factor(gruppe), tid = as.factor(tid)) %>% 
+  ggplot(aes())+
+  geom_half_violin(aes(x = gruppe, y = ll_r, fill = tid), side = ifelse(df$tid == 1, "l","r"), adjust = 1.3,trim = FALSE)+
+  geom_boxplot(aes(x = gruppe, y = ll_r, col = tid), width = 0.1, alpha = 0.8, position = position_dodge(width = 0.6))+
+  geom_point(aes(x = ifelse(tid == 1, as.numeric(as.character(gruppe))-0.1, as.numeric(as.character(gruppe))+0.1), y = ll_r,fill = tid),pch=21,size = 3, show.legend = FALSE)+
+  geom_line(aes(x = ifelse(tid == 1, as.numeric(as.character(gruppe))-0.1, as.numeric(as.character(gruppe))+0.1), y = ll_r,group = id), col = "black", alpha = 0.3)+
+  scale_color_manual(values = c("black","black"))+
+  labs(title = "Effect of creatine on time to exhaustion in a lock off",
+       x = "Group",
+       y = "Lock-off right hand (s)",
+       fill = "Time") + 
+  guides(color = "none")+
+  scale_x_discrete(breaks = c(1,2), labels = c("Control", "Creatine"))+
+  theme_classic() +
+  theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5),
+        axis.title = element_text(size = 14),
+        axis.text = element_text(size = 12),
+        legend.title = element_text(size = 14),
+        legend.text = element_text(size = 12),
+        legend.position = "top")
+
+
+
+```
+
+
+
+
+
+```{r, fig.width = 10, fig.height = 10, warning = F, message = F, echo = F, fig.cap = "This is the figure caption to make the space fit"}
+library(corrplot)
+data1 = data %>% distinct(id)
+names(data)
+data1 = data %>% mutate(ape = span-højde) %>% select(crimphøjremax,crimpvenstremax,pinchhøjremax,pinchvenstremax,moon.tal,BW,pullups_r,lattice_r,lr_r,ll_r,alder2,klatre_r2,højde,ape, tid, id)  %>% group_by(id) %>%  summarize(across(everything(), mean, na.rm = TRUE)) %>% mutate_all(as.numeric)
+
+
+data1$crimp = (data1$crimphøjremax+data1$crimpvenstremax)/2
+data1$pinch = (data1$pinchhøjremax+data1$pinchvenstremax)/2
+data1$lockoff = (data1$ll_r+data1$lr_r)/2
+
+
+data1 = data1 %>% select(crimp,pinch,moon.tal,BW,pullups_r,lattice_r,lockoff,højde,ape)
+
+correlation = pcor(data1)
+
+corrplot(cor(data1,use = "complete.obs"), method = "pie")
+
+#partial correlations:
+correlation = pcor(data1)
+corrplot(correlation$estimate, method = "pie",p.mat = correlation$p.value, sig.level = 0.05)
+```
+
+
+```{r, include=F, eval=T}
+cor = data %>% group_by(id) %>% summarize(lattice = mean(lattice_r), sportsgrade = mean(sport_grad)) %>% tidyr::drop_na()
+cor = cor.test(cor$lattice, cor$sportsgrade)
+
+
+cor = data %>% group_by(id) %>% summarize(crimphøjremax = mean(crimphøjremax), boldergrade = mean(bouldering_grad)) %>% tidyr::drop_na()
+cor = cor.test(cor$crimphøjremax, cor$boldergrade)
+
+```
+
+
+```{r, fig.width = 6, fig.height = 5, warning = F, message = F, echo = F, fig.cap = "This is the figure caption to make the space fit"}
+#correlation between time in lattice and self-reported sports grade:
+library(ggtext)
+cor = data %>% group_by(id) %>% summarize(lattice = mean(lattice_r), sportsgrade = mean(sport_grad)) %>% tidyr::drop_na()
+cor = cor.test(cor$lattice, cor$sportsgrade)
+
+data %>% group_by(id) %>% summarize(lattice = mean(lattice_r), sportsgrade = mean(sport_grad)) %>%  ggplot(aes(y = sportsgrade, x = lattice))+geom_point()+geom_smooth(method = "lm")+theme_classic()+ylab("self reported sports grade")+xlab("Time hung in lattice (s)")+geom_richtext(aes(x = 40, y = 2, label = paste("r = ",round(cor$estimate,2)," ", "[",round(cor$conf.int[1],2),";",round(cor$conf.int[2],2),"], "," p = .01")), size = 5,stat = "unique")
+
+cor = data %>% group_by(id) %>% summarize(crimphøjremax = mean(crimphøjremax), boldergrade = mean(bouldering_grad)) %>% tidyr::drop_na()
+cor = cor.test(cor$crimphøjremax, cor$boldergrade)
+data %>% group_by(id) %>% summarize(crimphøjremax = mean(crimphøjremax, na.rm = T), boldergrade = mean(bouldering_grad, na.rm = T)) %>% tidyr::drop_na() %>%  ggplot(aes(y = boldergrade, x = crimphøjremax))+geom_point()+geom_smooth(method = "lm")+theme_classic()+ylab("self reported bouldering grade")+xlab("MVC (right) (N)")+geom_richtext(aes(x = 500, y = 2, label = paste("r = ",round(cor$estimate,2)," ", "[",round(cor$conf.int[1],2),";",round(cor$conf.int[2],2),"], "," p > .05")), size = 5,stat = "unique")
+
+```
+
+
+
+# RFD
+
+
+```{r}
+library(lme4)
+library(ggtext)
+#rate of force development:
+rofd = read.csv("ROFD_data.csv")
+#one participant
+rofd$tid = as.factor(rofd$tid)
+
+d1 = rofd %>% filter(participant == "30",test == "ch", tid == "1",testnumber == "1")
+
+df = rofd %>% group_by(participant,test,testnumber,tid) %>% mutate(x = max(tag,na.rm = T))
+
+df$logical = ifelse(df$tag == df$x, a<-TRUE, b<- FALSE)
+
+df = df %>% group_by(participant,test,testnumber,tid) %>% mutate(rækker = 1:n())
+
+df = df %>% group_by(participant,test,testnumber,tid) %>% mutate(aa = min(which(logical == TRUE)))
+
+df$logical = ifelse(df$rækker < df$aa+10, a<-TRUE, b<- FALSE)
+
+
+
+library(nlme)
+get_parm_nonlin = function(data,testt, testnumberr, tidd){
+  p30 = data %>% filter(test == testt,testnumber == testnumberr, logical == TRUE, tid == tidd) %>% drop_na(tag)
+  
+  p30 %>% ggplot(aes(date, y = tag))+geom_point()+facet_wrap(~participant, ncol = 4)
+  
+  if(testt == "ch" | testt == "cv"){
+    hill_nlme_fit <- nlme::nlme(tag~SSlogis(date,a,b,c), 
+                      data = p30,
+                      fixed=a+b+c~1, 
+                      random = a + b + c ~ 1, 
+                      groups = ~ participant, 
+                      start = c(Asym = 400,xmid = 1, scal = 0.07),
+                      verbose = F,
+                      control = nlmeControl(maxIter = 1000, msMaxIter = 1000))
+  }else{
+    hill_nlme_fit <- nlme::nlme(tag~SSlogis(date,a,b,c), 
+                  data = p30,
+                  fixed=a+b+c~1, 
+                  random = a + b + c ~ 1, 
+                  groups = ~ participant, 
+                  start = c(Asym = 100,xmid = 0.5, scal = 0.1),
+                  verbose = F,
+                  control = nlmeControl(maxIter = 1000, msMaxIter = 1000))
+    
+  }
+  
+  
+  
+  summary(hill_nlme_fit)
+  
+  coef = as_tibble(coef(hill_nlme_fit), rownames = 'participant')
+  colnames(coef) = c("id","amplitude","xmid","RFD")
+  
+  coef$test = testt
+  coef$testnumber = testnumberr
+  coef$tid = tidd
+  
+  hill_predtimes <- tidyr::crossing(participant=p30$participant, 
+                                date=seq(min(p30$date),
+                                    max(p30$date),
+                                    length.out=128))
+  
+  hill_nlmepreds <- hill_predtimes %>% 
+    mutate(.fitted=predict(hill_nlme_fit, newdata=hill_predtimes))
+  
+  plot = ggplot(p30, aes(x=date, y=tag)) +
+    geom_point() +
+    geom_richtext(aes(x = 3, y = 100, label = paste("Maxcrimp = ", round(x,2))), size = 2.5,stat = "unique")+
+    geom_line(data=hill_nlmepreds, aes(y=.fitted), linewidth=0.7) +
+    facet_wrap(~participant, ncol=4)
+
+  return(list(coef = coef, plot = plot))
+}
+
+
+ch11 = get_parm_nonlin(df,"ch",1,1)
+ch12 = get_parm_nonlin(df,"ch",1,2)
+ch21 = get_parm_nonlin(df,"ch",2,1)
+ch22 = get_parm_nonlin(df,"ch",2,2)
+ch31 = get_parm_nonlin(df,"ch",3,1)
+ch32 = get_parm_nonlin(df,"ch",3,2)
+
+
+ch = rbind(ch11$coef,ch21$coef,ch31$coef)
+q = ch %>% dplyr::group_by(id) %>% dplyr::summarize(RFD_ch = max(RFD)) %>% mutate(tid = 1)
+
+ch = rbind(ch12$coef,ch22$coef,ch32$coef)
+qq = ch %>% dplyr::group_by(id) %>% dplyr::summarize(RFD_ch = max(RFD)) %>% mutate(tid = 2)
+
+ch = rbind(q,qq)
+
+ch11$plot
+ch12$plot
+ch21$plot
+ch12$plot
+
+
+cv11 = get_parm_nonlin(df,"cv",1,1)
+cv12 = get_parm_nonlin(df,"cv",1,2)
+cv21 = get_parm_nonlin(df,"cv",2,1)
+cv22 = get_parm_nonlin(df,"cv",2,2)
+cv31 = get_parm_nonlin(df,"cv",2,1)
+cv32 = get_parm_nonlin(df,"cv",2,2)
+
+
+cv = rbind(cv11$coef,cv21$coef,cv31$coef)
+q = cv %>% dplyr::group_by(id) %>% dplyr::summarize(RFD_cv = max(RFD)) %>% mutate(tid = 1)
+
+cv = rbind(cv12$coef,cv22$coef,cv32$coef)
+qq = cv %>% dplyr::group_by(id) %>% dplyr::summarize(RFD_cv = max(RFD)) %>% mutate(tid = 2)
+
+cv = rbind(q,qq)
+
+cv11$plot
+cv12$plot
+cv21$plot
+cv12$plot
+
+cv$tid = as.factor(cv$tid)
+ch$tid = as.factor(ch$tid)
+
+rfd = inner_join(cv,ch)
+
+data$id = as.factor(data$id)
+
+data = inner_join(data,rfd)
+
+
+#N/(S*kg) = RFD/BW
+data1 = data %>% group_by(id, tid) %>% dplyr::summarize(RFD_chbw = RFD_ch/BW, RFD_cvbw = RFD_cv/BW) %>% inner_join(data)
+
+
+m1 = manova(cbind(RFD_cvbw, RFD_chbw) ~ 
+              tid*gruppe+Error(id),
+              data = data1)
+
+summary(m1)
+
+
+summary(lmerTest::lmer(RFD_chbw ~ tid*gruppe + (1| id), data = data1))
+
+
+m1 = manova(cbind(hcbw,vcbw, hpbw, vpbw,pullups_r,lattice_r,llbw, lrbw) ~ 
+              tid*gruppe+Error(id),
+              data = data1)
+
+summary(m1)
+
+
+fulldata1 = data1 %>% dplyr::summarize(crimp = mean((hcbw+vcbw)/2, na.rm = T), 
+                                                    lockoff = mean((ll_r+lr_r)/2, na.rm = T),
+                                                    pinch = mean((hpbw+vpbw)/2, na.rm = T),
+                                                    pullups = mean(pullups_r, na.rm = T),
+                                                    lattice = mean(lattice_r, na.rm = T),
+                                                    RFD = mean((RFD_chbw+RFD_cvbw)/2, na.rm = T),
+                                                    moonboard = mean(moon.tal, na.rm = T),
+                                                    climbing_experience = klatre_r2,
+                                                    ape_idx = mean(span-højde,na.rm = T),
+                                       tid = tid,
+                                       gruppe = gruppe,
+                                       id = id
+                                                    )
+
+m1 = manova(cbind(crimp,lockoff, pinch, pullups,lattice,RFD) ~ 
+              tid*gruppe+Error(id),
+              data = fulldata1)
+
+summary(m1)
+```
+
+
+
+
+
+
+```{r}
+hands = readxl::read_xlsx("Hand measurements.xlsx")
+colnames(hands) = c("id","tl","tt","pl","pt","fl","ft","rl","rt","ll","lt")
+hands$id = as.factor(hands$id)
+
+hands$tl = as.numeric(hands$tl)
+hands$pl = as.numeric(hands$pl)
+hands$fl = as.numeric(hands$fl)
+hands$rl = as.numeric(hands$rl)
+hands$ll = as.numeric(hands$ll)
+
+hands$avg_l = (hands$tl+hands$pl+hands$fl+hands$rl+hands$ll)/5
+
+hands$tt = as.numeric(hands$tt)
+hands$pt = as.numeric(hands$pt)
+hands$ft = as.numeric(hands$ft)
+hands$rt = as.numeric(hands$rt)
+hands$lt = as.numeric(hands$lt)
+
+hands$avg_t = (hands$tt+hands$pt+hands$ft+hands$rt+hands$lt)/5
+
+
+fulldata = inner_join(data, hands)
+
+fulldata = fulldata %>% group_by(id, tid) %>% dplyr::summarize(RFD_chbw = RFD_ch/BW, RFD_cvbw = RFD_cv/BW) %>% inner_join(fulldata)
+
+fulldata1 = fulldata  %>% group_by(id) %>% dplyr::summarize(crimp = mean((hcbw+vcbw)/2, na.rm = T), 
+                                                    lockoff = mean((ll_r+lr_r)*vægt/2, na.rm = T),
+                                                    pinch = mean((hpbw+vpbw)/2, na.rm = T),
+                                                    pullups = mean(pullups_r, na.rm = T),
+                                                    lattice = mean(lattice_r, na.rm = T),
+                                                    RFD = mean((RFD_chbw+RFD_cvbw)/2, na.rm = T),
+                                                    moonboard = mean(moon.tal, na.rm = T),
+                                                    climbing_experience = klatre_r2,
+                                                    ape_idx = mean(span-højde,na.rm = T)
+                                                    )
+                                                    
+
+
+fulldata1 = fulldata1[seq(1,nrow(fulldata1),by = 2), ]
+
+fulldata1$id = NULL
+
+fulldata2 = fulldata1  %>% drop_na()
+
+
+cor.test(fulldata1$lattice, fulldata1$lockoff)
+
+```
+
+
+```{r}
+# library(ppcor)
+# library(corrplot)
+# data1 = data %>% distinct(id)
+# a = data[,c(15,17,18,19,20,21,22,23,25,26,27,28,29,30,31,39,44,41,40)]
+# 
+# fulldata1$id = as.numeric(fulldata1$id)
+# 
+# correlation = pcor(fulldata1 %>% drop_na())
+# 
+# a = fulldata1 %>% drop_na()
+# 
+# library(Hmisc)
+# 
+# 
+# corrplot(cor(fulldata1, use = "pairwise.complete.obs"), type = "upper", number.font = 2)
+# 
+# ?corrplot()
+# 
+
+```
+
